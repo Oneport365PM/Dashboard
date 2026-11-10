@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OnePort365 CRM Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Open+Sans:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="design/tokens.css" />
+  <style>
+/*
+  OnePort365 CRM pipeline board.
+  Same tokens and shell as the operations dashboard (index.html).
+  Opened from a shipment's "Prospect" link with ?deal=&customer=&owner=&value=&stage=&note=
+  — that deal is placed in its stage and highlighted.
+*/
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--op-cream); color: var(--op-silver-dark);
+  font-family: var(--op-font-body); font-size: 14px; font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--op-dark-green); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+.shell { display: flex; min-height: 100%; }
+.rail {
+  width: 72px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; background: var(--op-dark-green);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 0;
+}
+.rail-mark {
+  width: 40px; height: 40px; border-radius: 12px; margin-bottom: 14px; background: var(--op-accent-lime); color: var(--op-dark-green);
+  display: flex; align-items: center; justify-content: center; font-family: var(--op-font-display); font-weight: 700; font-size: 14px;
+}
+.rail-btn { width: 44px; height: 44px; border-radius: var(--op-radius-md); display: flex; align-items: center; justify-content: center; color: var(--op-light-green); }
+.rail-btn svg { width: 22px; height: 22px; }
+.rail-btn:hover { background: rgba(255,255,255,.1); color: var(--op-white); }
+.rail-btn.active { background: var(--op-accent-lime); color: var(--op-dark-green); }
+.rail-spacer { flex: 1; }
+
+.main { flex: 1; min-width: 0; padding: 28px max(32px, env(safe-area-inset-right, 0px)) 40px max(32px, env(safe-area-inset-left, 0px)); }
+.back {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; text-decoration: none;
+  color: var(--op-dark-green); font-weight: 700; font-size: 13px;
+}
+.back svg { width: 14px; height: 14px; }
+.back:hover { text-decoration: underline; }
+.top h1 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 28px; letter-spacing: -.015em; color: var(--op-dark-green); }
+.top p { margin: 6px 0 20px; color: var(--op-silver-light); font-size: 15px; }
+
+.focus-banner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; padding: 12px 14px;
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-left: 4px solid var(--op-accent-lime);
+  border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); line-height: 1.45;
+}
+.focus-banner b { color: var(--op-dark-green); }
+.focus-banner .clear { margin-left: auto; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-weight: 700; color: var(--op-dark-green); border-bottom: 1.5px solid var(--op-dark-green); }
+
+.board-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px 8px; }
+.board { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; min-width: 1160px; }
+.col { min-width: 0; background: rgba(209, 219, 189, .35); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-xl); padding: 14px; min-height: 360px; }
+.col-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.stage-num {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--op-dark-green); color: var(--op-white);
+  display: inline-flex; align-items: center; justify-content: center; font-family: var(--op-font-display); font-weight: 600; font-size: 11px;
+}
+.col-head h2 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 15px; color: var(--op-dark-green); }
+.col-bar { display: block; height: 4px; width: 28px; border-radius: 2px; background: var(--bar); margin: 0 0 6px 30px; }
+.col-count { margin: 0 0 12px 30px; font-size: 12px; color: var(--op-silver-light); }
+.cards { display: grid; gap: 10px; }
+.empty { padding: 18px 8px; text-align: center; color: var(--op-silver-light); font-size: 13px; border: 1.5px dashed var(--op-border-input); border-radius: var(--op-radius-lg); }
+
+.card {
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg);
+  box-shadow: var(--op-elevation-1); padding: 12px; display: grid; gap: 8px; min-width: 0;
+}
+.card > * { min-width: 0; }
+.card-top { display: flex; justify-content: space-between; gap: 8px; font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); }
+.card-top span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-top b { color: var(--op-chip-warning-text); font-weight: 600; }
+.owner { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--op-silver-dark); }
+.avatar {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--op-font-display); font-weight: 600; font-size: 9px;
+}
+.avatar-1 { background: var(--op-avatar-1-bg); color: var(--op-avatar-1-text); }
+.avatar-2 { background: var(--op-avatar-2-bg); color: var(--op-avatar-2-text); }
+.avatar-3 { background: var(--op-avatar-3-bg); color: var(--op-avatar-3-text); }
+.avatar-4 { background: var(--op-avatar-4-bg); color: var(--op-avatar-4-text); }
+.tag { justify-self: start; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--op-radius-sm); }
+.tag-won { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); }
+.tag-lost { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
+.tag-deal { background: var(--op-dark-green); color: var(--op-accent-lime); }
+.note { font-size: 12px; color: var(--op-silver-light); line-height: 1.4; }
+.card.focus { border: 2px solid var(--op-dark-green); box-shadow: var(--op-focus-ring), var(--op-elevation-2); }
+
+@media (max-width: 700px) {
+  .shell { flex-direction: column; }
+  .rail { width: 100%; height: auto; flex-direction: row; z-index: 20; padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
+  .rail-mark { margin: 0 8px 0 0; }
+  .main { padding: 20px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+  .top h1 { font-size: 22px; }
+}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="rail" aria-label="Main">
+      <span class="rail-mark" aria-hidden="true">OP</span>
+      <a class="rail-btn" href="index.html" aria-label="Operations dashboard" title="Operations dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      </a>
+      <a class="rail-btn active" href="crm.html" aria-current="page" aria-label="CRM board" title="CRM board">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="10" y="4" width="5" height="10" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="17" y="4" width="4" height="13" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </a>
+      <span class="rail-spacer"></span>
+    </nav>
+
+    <main class="main">
+      <a class="back" href="index.html" id="back">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to dashboard
+      </a>
+      <header class="top">
+        <h1>CRM board</h1>
+        <p>Deals by pipeline stage</p>
+      </header>
+
+      <div class="focus-banner" id="banner" role="status" hidden></div>
+
+      <div class="board-wrap">
+        <div class="board" id="board"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  var STAGES = [
+    { id: "prospect", name: "Prospect", bar: "var(--op-cat-1)" },
+    { id: "contacted", name: "Contacted", bar: "var(--op-cat-2)" },
+    { id: "qualified", name: "Qualified", bar: "var(--op-cat-3)" },
+    { id: "quote", name: "Quote Issued", bar: "var(--op-cat-5)" },
+    { id: "closed", name: "Closed", bar: "var(--op-cat-6)" }
+  ];
+
+  // Sample deals on the board
+  var DEALS = [
+    { customer: "Srtc exim ltd", value: 3330, owner: "Kayode Akintade", stage: "prospect" },
+    { customer: "Autochek", value: 12500, owner: "Aishat Jimoh", stage: "prospect" },
+    { customer: "Goshen agro", value: 18580, owner: "Deborah Oje", stage: "prospect" },
+    { customer: "Tamrose limited", value: 8320, owner: "Babatope Ayeni", stage: "qualified" },
+    { customer: "Alliance chemicals", value: 54000, owner: "Gift Osaremen", stage: "qualified" },
+    { customer: "Quest hill", value: 85000, owner: "Deborah Oje", stage: "quote" },
+    { customer: "Powerpro", value: 2080, owner: "Kayode Akintade", stage: "quote" },
+    { customer: "Bioscape commodities africa", value: 11000, owner: "Adeshewa Adelowotan", stage: "closed", result: "won" },
+    { customer: "Quest hill", value: 25000, owner: "Aishat Jimoh", stage: "closed", result: "won" },
+    { customer: "Limeswood", value: 6400, owner: "Gift Osaremen", stage: "closed", result: "lost" }
+  ];
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function money(n) { return "$" + Number(n).toLocaleString("en-US"); }
+  function hash(str) { var x = 2166136261; for (var i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
+  function avatar(name) {
+    var ini = name.split(" ").map(function (w) { return w.charAt(0); }).join("").slice(0, 2).toUpperCase();
+    return '<span class="avatar avatar-' + (hash(name) % 4 + 1) + '" aria-hidden="true">' + esc(ini) + "</span>";
+  }
+
+  // ---------- Deal passed in from the dashboard ----------
+  var q = new URLSearchParams(location.search);
+  var focus = null;
+  if (q.get("customer")) {
+    var stage = q.get("stage") || "prospect";
+    var result = stage === "closed-won" ? "won" : stage === "closed-lost" ? "lost" : null;
+    if (result) stage = "closed";
+    if (!STAGES.some(function (s) { return s.id === stage; })) stage = "prospect";
+    var customer = q.get("customer");
+    // The deal moves: take any card for this customer out of the earlier stages
+    DEALS = DEALS.filter(function (d) { return d.customer !== customer || d.stage === "closed"; });
+    focus = { customer: customer, value: Number(q.get("value")) || 0, owner: q.get("owner") || "", stage: stage,
+      result: result, deal: q.get("deal"), note: q.get("note"), focus: true };
+    DEALS.unshift(focus);
+  }
+
+  function render() {
+    document.getElementById("board").innerHTML = STAGES.map(function (st, i) {
+      var deals = DEALS.filter(function (d) { return d.stage === st.id; });
+      var total = deals.reduce(function (t, d) { return t + d.value; }, 0);
+      var count = st.id === "closed"
+        ? deals.filter(function (d) { return d.result === "won"; }).length + " won · " + deals.filter(function (d) { return d.result === "lost"; }).length + " lost"
+        : deals.length + " · " + money(total);
+      return '<section class="col" style="--bar:' + st.bar + '" aria-labelledby="st-' + st.id + '">' +
+        '<div class="col-head"><span class="stage-num">' + (i + 1) + '</span><h2 id="st-' + st.id + '">' + esc(st.name) + "</h2></div>" +
+        '<span class="col-bar"></span><p class="col-count">' + count + "</p>" +
+        '<div class="cards">' + (deals.length ? deals.map(card).join("") : '<div class="empty">No deals</div>') + "</div></section>";
+    }).join("");
+  }
+  function card(d) {
+    return '<article class="card' + (d.focus ? " focus" : "") + '"' + (d.focus ? ' id="focusCard" tabindex="-1"' : "") + ">" +
+      (d.deal ? '<span class="tag tag-deal">' + esc(d.deal) + "</span>" : "") +
+      '<div class="card-top"><span title="' + esc(d.customer) + '">' + esc(d.customer) + "</span><b>" + money(d.value) + "</b></div>" +
+      (d.owner ? '<span class="owner">' + avatar(d.owner) + esc(d.owner) + "</span>" : "") +
+      (d.note ? '<span class="note">' + esc(d.note) + "</span>" : "") +
+      (d.result === "won" ? '<span class="tag tag-won">✓ Won</span>' : d.result === "lost" ? '<span class="tag tag-lost">✕ Lost</span>' : "") +
+      "</article>";
+  }
+
+  render();
+
+  if (focus) {
+    var stageName = STAGES.filter(function (s) { return s.id === focus.stage; })[0].name;
+    var banner = document.getElementById("banner");
+    banner.innerHTML = "<span>Showing <b>" + esc(focus.customer) + "</b>" + (focus.deal ? " from " + esc(focus.deal) : "") +
+      " in <b>" + esc(stageName) + (focus.result ? " (" + focus.result + ")" : "") + "</b>" +
+      (focus.note ? " · " + esc(focus.note) : "") + '</span><button type="button" class="clear" id="clear">Show all deals</button>';
+    banner.hidden = false;
+    document.getElementById("clear").addEventListener("click", function () { location.href = "crm.html"; });
+    var el = document.getElementById("focusCard");
+    el.scrollIntoView({ block: "nearest", inline: "center" });
+    el.focus({ preventScroll: true });
+  }
+})();
+  </script>
+</body>
+</html>

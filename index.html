@@ -390,6 +390,9 @@ button { font: inherit; color: inherit; }
       <a class="rail-btn active" href="#" aria-current="page" aria-label="Home" title="Home">
         <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
       </a>
+      <a class="rail-btn" href="crm.html" aria-label="CRM board" title="CRM board">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="10" y="4" width="5" height="10" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="17" y="4" width="4" height="13" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </a>
       <a class="rail-btn" href="#" aria-label="Analytics" title="Analytics">
         <svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M9 16v-5M14 16V8M19 16v-3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
       </a>
@@ -570,6 +573,8 @@ button { font: inherit; color: inherit; }
   };
   // Where the RFQ step in the shipment drawer links to: the backoffice RFQ table
   var RFQ_TABLE_URL = "/rfq";
+  // Where the Prospect heading in the shipment drawer links to: the CRM pipeline board
+  var CRM_BOARD_URL = "crm.html";
   var STEP_LINKS = { "RFQ": RFQ_TABLE_URL };
   var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var STEP_TEAM = {
@@ -638,6 +643,22 @@ button { font: inherit; color: inherit; }
   }
   // OP-26-11-004 (Silver star, Rate request) removed from the sample list
   var SHIPMENTS = buildShipments().filter(function (s) { return s.id !== "OP-26-11-004"; });
+
+  // Newest shipment: deal created by Deborah, customer then contacted by Kayode
+  (function () {
+    var last = SHIPMENTS.reduce(function (m, s) { return Math.max(m, +s.id.slice(-3)); }, 0);
+    SHIPMENTS.unshift({
+      id: "OP-26-11-" + String(last + 1).padStart(3, "0"),
+      customer: "Srtc exim ltd", owner: "Deborah Oje", value: 3330,
+      mode: "Ocean freight", route: "Shanghai → Apapa", created: "10/11/2026",
+      lost: false, lostStep: null, lostReason: null,
+      step: stepIndex("Customer contacted"), phase: 0, alert: null,
+      history: [
+        { owner: "Deborah Oje", at: new Date(2026, 10, 10, 9, 12), label: "Deal created" },
+        { owner: "Kayode Akintade", at: new Date(2026, 10, 10, 11, 40), label: "Contacted" }
+      ]
+    });
+  })();
 
   // ---------- Helpers ----------
   function $(id) { return document.getElementById(id); }
@@ -807,6 +828,7 @@ button { font: inherit; color: inherit; }
   // For steps 0..current: who handled it and when it was completed (or, for the current step, when it started)
   var AS_OF = new Date(2026, 10, 10, 12, 0); // sample data is dated up to 10 Nov 2026
   function stepHistory(s, current) {
+    if (s.history) return s.history; // recorded history for hand-entered shipments
     // Work in "office minutes" (08:00-18:00) so every time lands within working hours
     var d = s.created.split("/");
     var day0 = new Date(+d[2], +d[1] - 1, +d[0]);
@@ -831,6 +853,26 @@ button { font: inherit; color: inherit; }
     return '<span class="avatar avatar-' + (hash(name) % 4 + 1) + '" aria-hidden="true">' + esc(ini) + "</span>";
   }
 
+  // ---------- Link to the CRM board ----------
+  // Which CRM board column a shipment's deal sits in
+  function crmStage(s) {
+    if (s.lost) return "closed-lost";
+    var name = STEPS[s.step].name;
+    if (s.phase > 0 || name === "Customer acceptance") return "closed-won";
+    return { "Deal created": "prospect", "Customer contacted": "contacted", "RFQ": "qualified",
+      "Rate request": "qualified" }[name] || "quote";
+  }
+  function crmUrl(s, hist) {
+    var lastStep = Math.min(s.lost ? s.lostStep : s.step, PHASES[0].steps.length - 1);
+    var h = hist[lastStep];
+    var current = s.lost ? s.lostStep : s.step;
+    var verb = h.label || (s.lost && lastStep === current ? "Lost" :
+      STEPS[lastStep].name + (lastStep < current ? " completed" : " started"));
+    var q = { deal: s.id, customer: s.customer, owner: s.owner, value: s.value, stage: crmStage(s),
+      note: verb + " by " + h.owner + " · " + fmtDateTime(h.at) };
+    return CRM_BOARD_URL + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
+  }
+
   // ---------- Detail drawer ----------
   var lastFocus = null;
   function openDrawer(id) {
@@ -852,14 +894,17 @@ button { font: inherit; color: inherit; }
     var current = s.lost ? s.lostStep : s.step;
     var hist = stepHistory(s, current);
     var steps = PHASES.map(function (p, pi) {
-      return '<li class="step-phase">' + esc(p.name) + "</li>" + STEPS.map(function (st, si) {
+      var head = pi === 0
+        ? '<a class="step-link" href="' + esc(crmUrl(s, hist)) + '" title="Open this deal on the CRM board">' + esc(p.name) + ARROW + "</a>"
+        : esc(p.name);
+      return '<li class="step-phase">' + head + "</li>" + STEPS.map(function (st, si) {
         if (st.phase !== pi) return "";
         var cls = si < current ? "done" : si === current ? (s.lost ? "lost" : "current") : "";
         var mark = si < current ? CHECK : si === current && s.lost ? CROSS : "";
         var meta = "";
         if (si <= current) {
           var hh = hist[si];
-          var when = si < current ? "Completed " : s.lost ? "Lost " : "Started ";
+          var when = hh.label ? hh.label + " " : si < current ? "Completed " : s.lost ? "Lost " : "Started ";
           meta = '<span class="step-meta">' + avatar(hh.owner) + "<b>" + esc(hh.owner) + "</b>·" +
             '<time datetime="' + hh.at.toISOString() + '">' + when + fmtDateTime(hh.at) + "</time></span>";
         }
