@@ -902,7 +902,9 @@ button { font: inherit; color: inherit; }
     var verb = h.label || (s.lost && lastStep === current ? "Lost" :
       STEPS[lastStep].name + (lastStep < current ? " completed" : " started"));
     var q = { deal: s.id, customer: s.customer, owner: s.owner, value: s.value, stage: crmStage(s),
-      note: verb + " by " + h.owner + " · " + fmtDateTime(h.at) };
+      note: verb + " by " + h.owner + " · " + fmtDateTime(h.at), created: s.created.replace(/\//g, "-") };
+    var rfq = rfqNumber(s);
+    if (rfq) { q.rfq = rfq; q.rfqlink = rfqUrl(s); }
     return CRM_BOARD_URL + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
   }
 

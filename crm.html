@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OnePort365 CRM Board</title>
+  <title>OnePort365 CRM Pipeline</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Open+Sans:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="design/tokens.css" />
   <style>
 /*
-  OnePort365 CRM pipeline board.
-  Same tokens and shell as the operations dashboard (index.html).
-  Opened from a shipment's "Prospect" link with ?deal=&customer=&owner=&value=&stage=&note=
+  OnePort365 CRM — Pipeline board.
+  Mirrors the backoffice CRM Pipeline screen, built on design/tokens.css.
+  Opened from a shipment's "Prospect" link with
+  ?deal=&customer=&owner=&value=&stage=&note=&created=&rfq=&rfqlink=
   — that deal is placed in its stage and highlighted.
 */
 * { box-sizing: border-box; }
@@ -23,9 +24,11 @@ body {
   font-family: var(--op-font-body); font-size: 14px; font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
+button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--op-dark-green); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
+/* ---------- Shell ---------- */
 .shell { display: flex; min-height: 100%; }
 .rail {
   width: 72px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; background: var(--op-dark-green);
@@ -39,70 +42,147 @@ body {
 .rail-btn svg { width: 22px; height: 22px; }
 .rail-btn:hover { background: rgba(255,255,255,.1); color: var(--op-white); }
 .rail-btn.active { background: var(--op-accent-lime); color: var(--op-dark-green); }
-.rail-spacer { flex: 1; }
+.main { flex: 1; min-width: 0; padding: 20px max(24px, env(safe-area-inset-right, 0px)) 40px max(24px, env(safe-area-inset-left, 0px)); }
 
-.main { flex: 1; min-width: 0; padding: 28px max(32px, env(safe-area-inset-right, 0px)) 40px max(32px, env(safe-area-inset-left, 0px)); }
-.back {
-  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; text-decoration: none;
-  color: var(--op-dark-green); font-weight: 700; font-size: 13px;
-}
+.back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--op-dark-green); font-weight: 700; font-size: 13px; }
 .back svg { width: 14px; height: 14px; }
 .back:hover { text-decoration: underline; }
-.top h1 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 28px; letter-spacing: -.015em; color: var(--op-dark-green); }
-.top p { margin: 6px 0 20px; color: var(--op-silver-light); font-size: 15px; }
+
+/* ---------- Tabs ---------- */
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--op-border-card); margin: 14px 0 20px; overflow-x: auto; }
+.tab {
+  display: inline-flex; align-items: center; gap: 6px; padding: 12px 16px; margin-bottom: -1px; cursor: pointer; white-space: nowrap;
+  background: none; border: 0; border-bottom: 2px solid transparent; color: var(--op-silver-dark); font-size: 15px;
+}
+.tab svg { width: 14px; height: 14px; }
+.tab:hover { color: var(--op-dark-green); }
+.tab.active { color: var(--op-dark-green); font-weight: 700; border-bottom-color: var(--op-dark-green); }
+.stub { padding: 48px 16px; text-align: center; color: var(--op-silver-light); }
+.stub h3 { margin: 0 0 6px; font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); }
+
+/* ---------- Stat cards ---------- */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.stat {
+  position: relative; padding: 18px 20px; background: var(--op-white); border: 1px solid var(--op-border-card);
+  border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1);
+}
+.stat.highlight { background: rgba(209, 219, 189, .45); }
+.stat-label { color: var(--op-silver-dark); font-size: 14px; }
+.stat-value { margin: 12px 0 6px; font-family: var(--op-font-display); font-weight: 700; font-size: 24px; color: var(--op-dark-green); letter-spacing: -.01em; }
+.stat-value.gold { color: var(--op-chip-warning-text); }
+.stat-sub { font-size: 13px; color: var(--op-silver-dark); }
+.stat-icon {
+  position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: var(--op-radius-sm);
+  background: rgba(191, 251, 79, .35); color: var(--op-dark-green); display: flex; align-items: center; justify-content: center;
+}
+.stat-icon svg { width: 14px; height: 14px; }
+
+/* ---------- Toolbar ---------- */
+.toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.search {
+  flex: 1 1 320px; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px;
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md);
+}
+.search svg { width: 16px; height: 16px; color: var(--op-silver-dark); flex-shrink: 0; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; }
+.search:focus-within { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); }
+.select {
+  height: 40px; min-width: 150px; padding: 0 12px; cursor: pointer; background: var(--op-white);
+  border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md); color: var(--op-silver-dark);
+}
+.select:focus { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); outline: none; }
+.seg { display: inline-flex; background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md); overflow: hidden; }
+.seg button { height: 38px; padding: 0 16px; border: 0; background: none; cursor: pointer; color: var(--op-silver-dark); }
+.seg button[aria-pressed="true"] { background: var(--op-dark-green); color: var(--op-white); font-family: var(--op-font-display); font-weight: 600; }
+.btn-primary {
+  height: 40px; padding: 0 18px; border: 0; border-radius: var(--op-radius-md); cursor: pointer;
+  background: var(--op-accent-lime); color: var(--op-dark-green); font-family: var(--op-font-display); font-weight: 600;
+}
+.btn-primary:hover { background: var(--op-accent-lime-hover); }
+.showing { margin: 0 0 12px; font-size: 13px; color: var(--op-silver-dark); }
+.showing b { color: var(--op-dark-green); }
 
 .focus-banner {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 12px 14px;
   background: var(--op-white); border: 1px solid var(--op-border-card); border-left: 4px solid var(--op-accent-lime);
   border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); line-height: 1.45;
 }
 .focus-banner b { color: var(--op-dark-green); }
-.focus-banner .clear { margin-left: auto; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-weight: 700; color: var(--op-dark-green); border-bottom: 1.5px solid var(--op-dark-green); }
+.link-btn { margin-left: auto; background: none; border: 0; padding: 0; cursor: pointer; font-weight: 700; color: var(--op-dark-green); border-bottom: 1.5px solid var(--op-dark-green); }
 
+/* ---------- Board ---------- */
 .board-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px 8px; }
-.board { display: grid; grid-template-columns: repeat(5, minmax(220px, 1fr)); gap: 14px; min-width: 1160px; }
-.col { min-width: 0; background: rgba(209, 219, 189, .35); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-xl); padding: 14px; min-height: 360px; }
-.col-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.board { display: grid; grid-template-columns: repeat(5, minmax(250px, 1fr)); gap: 20px; min-width: 1330px; }
+.col { min-width: 0; }
+.col-head { display: flex; align-items: center; gap: 8px; }
 .stage-num {
-  width: 22px; height: 22px; border-radius: 50%; background: var(--op-dark-green); color: var(--op-white);
+  width: 20px; height: 20px; border-radius: 50%; background: var(--op-accent-lime); color: var(--op-dark-green);
   display: inline-flex; align-items: center; justify-content: center; font-family: var(--op-font-display); font-weight: 600; font-size: 11px;
 }
-.col-head h2 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 15px; color: var(--op-dark-green); }
-.col-bar { display: block; height: 4px; width: 28px; border-radius: 2px; background: var(--bar); margin: 0 0 6px 30px; }
-.col-count { margin: 0 0 12px 30px; font-size: 12px; color: var(--op-silver-light); }
-.cards { display: grid; gap: 10px; }
-.empty { padding: 18px 8px; text-align: center; color: var(--op-silver-light); font-size: 13px; border: 1.5px dashed var(--op-border-input); border-radius: var(--op-radius-lg); }
+.stage-num.closed { background: var(--op-dark-green); color: var(--op-white); }
+.col-head h2 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 16px; color: var(--op-dark-green); }
+.col-count { margin: 6px 0 0; padding-bottom: 12px; border-bottom: 1px solid var(--op-border-card); font-size: 13px; color: var(--op-silver-dark); }
+.cards { display: grid; gap: 12px; margin-top: 14px; }
+.empty-col { padding: 22px 8px; text-align: center; color: var(--op-silver-light); font-size: 13px; border: 1.5px dashed var(--op-border-input); border-radius: var(--op-radius-lg); }
 
-.card {
-  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg);
-  box-shadow: var(--op-elevation-1); padding: 12px; display: grid; gap: 8px; min-width: 0;
-}
-.card > * { min-width: 0; }
-.card-top { display: flex; justify-content: space-between; gap: 8px; font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); }
-.card-top span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-top b { color: var(--op-chip-warning-text); font-weight: 600; }
-.owner { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--op-silver-dark); }
+.card { min-width: 0; background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); }
+.card-main { padding: 14px 14px 12px; }
+.card-id { font-size: 12px; color: var(--op-silver-light); letter-spacing: .02em; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin: 6px 0 12px; }
+.card-top span { min-width: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 15px; color: var(--op-dark-green); line-height: 1.4; }
+.card-top b { flex-shrink: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 15px; color: var(--op-chip-warning-text); }
+.owner-row { display: flex; align-items: center; gap: 8px; }
+.owner { display: inline-flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--op-silver-dark); }
+.owner span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .avatar {
-  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--op-font-display); font-weight: 600; font-size: 9px;
 }
 .avatar-1 { background: var(--op-avatar-1-bg); color: var(--op-avatar-1-text); }
 .avatar-2 { background: var(--op-avatar-2-bg); color: var(--op-avatar-2-text); }
 .avatar-3 { background: var(--op-avatar-3-bg); color: var(--op-avatar-3-text); }
 .avatar-4 { background: var(--op-avatar-4-bg); color: var(--op-avatar-4-text); }
-.tag { justify-self: start; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--op-radius-sm); }
-.tag-won { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); }
-.tag-lost { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
-.tag-deal { background: var(--op-dark-green); color: var(--op-accent-lime); }
-.note { font-size: 12px; color: var(--op-silver-light); line-height: 1.4; }
+.tier { margin-left: auto; flex-shrink: 0; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: var(--op-radius-full); border: 1px solid; }
+.tier-growth { color: var(--op-chip-warning-text); border-color: rgba(138, 106, 0, .45); background: var(--op-chip-warning-bg); }
+.tier-enterprise { color: var(--op-chip-success-text); border-color: rgba(15, 122, 69, .35); background: var(--op-chip-success-bg); }
+.tier-sme { color: var(--op-chip-neutral-text); border-color: var(--op-border-input); background: var(--op-white); }
+.card-note { margin-top: 10px; font-size: 12px; color: var(--op-silver-dark); line-height: 1.4; }
+.card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px 12px; border-top: 1px solid var(--op-border-divider); font-size: 12px; color: var(--op-silver-light); }
+.refs { flex-basis: 100%; display: flex; gap: 6px; flex-wrap: wrap; }
+.ref {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: var(--op-radius-sm); text-decoration: none;
+  font-size: 11px; font-weight: 700; letter-spacing: .02em;
+}
+.ref svg { width: 12px; height: 12px; }
+.ref-rfq { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); }
+.ref-quote { background: var(--op-light-green); color: var(--op-dark-green); }
+a.ref:hover { box-shadow: 0 0 0 1.5px currentColor; }
+.won, .lost { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--op-radius-sm); font-size: 12px; font-weight: 600; }
+.won { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); }
+.lost { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
 .card.focus { border: 2px solid var(--op-dark-green); box-shadow: var(--op-focus-ring), var(--op-elevation-2); }
+.from-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: var(--op-radius-sm); background: var(--op-dark-green); color: var(--op-accent-lime); font-size: 10px; font-weight: 700; }
 
+/* ---------- List ---------- */
+.list-card { background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); overflow-x: auto; }
+table { width: 100%; min-width: 900px; border-collapse: collapse; }
+th { text-align: left; padding: 12px 14px; background: rgba(209, 219, 189, .35); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--op-silver-dark); white-space: nowrap; }
+td { padding: 12px 14px; border-top: 1px solid var(--op-border-divider); white-space: nowrap; }
+td.co { font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); }
+td.val { font-family: var(--op-font-display); font-weight: 600; color: var(--op-chip-warning-text); }
+tr.focus td { background: rgba(191, 251, 79, .28); }
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 40; padding: 10px 16px; border-radius: var(--op-radius-md);
+  background: var(--op-dark-green); color: var(--op-cream); box-shadow: var(--op-elevation-3); font-size: 13px;
+}
+
+@media (max-width: 900px) { .stats { grid-template-columns: 1fr; } }
 @media (max-width: 700px) {
   .shell { flex-direction: column; }
   .rail { width: 100%; height: auto; flex-direction: row; z-index: 20; padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
   .rail-mark { margin: 0 8px 0 0; }
-  .main { padding: 20px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
-  .top h1 { font-size: 22px; }
+  .main { padding: 16px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+  .select { flex: 1 1 140px; min-width: 0; }
 }
   </style>
 </head>
@@ -119,53 +199,94 @@ body {
       <a class="rail-btn" href="rfq.html" aria-label="RFQ" title="RFQ">
         <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
       </a>
-      <span class="rail-spacer"></span>
     </nav>
 
     <main class="main">
-      <a class="back" href="index.html" id="back">
+      <a class="back" href="index.html">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back to dashboard
       </a>
-      <header class="top">
-        <h1>CRM board</h1>
-        <p>Deals by pipeline stage</p>
-      </header>
 
-      <div class="focus-banner" id="banner" role="status" hidden></div>
+      <nav class="tabs" role="tablist" aria-label="CRM">
+        <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="pipeline">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>Pipeline</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="companies">Companies</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-tab="contacts">Contacts</button>
+      </nav>
 
-      <div class="board-wrap">
-        <div class="board" id="board"></div>
-      </div>
+      <section id="panel-pipeline">
+        <div class="stats" id="stats"></div>
+
+        <div class="focus-banner" id="banner" role="status" hidden></div>
+
+        <div class="toolbar">
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="search" id="search" placeholder="Search deals, deal ID, RFQ or quote number..." aria-label="Search deals" autocomplete="off" />
+          </label>
+          <select class="select" id="owner" aria-label="Owner"><option value="">All Owners</option></select>
+          <select class="select" id="status" aria-label="Status">
+            <option value="">All Statuses</option><option value="open">Open</option><option value="won">Won</option><option value="lost">Lost</option>
+          </select>
+          <select class="select" id="sort" aria-label="Sort">
+            <option value="new">Date created</option><option value="old">Oldest first</option><option value="value">Highest value</option>
+          </select>
+          <div class="seg" role="group" aria-label="View">
+            <button type="button" id="viewBoard" aria-pressed="true">Board</button>
+            <button type="button" id="viewList" aria-pressed="false">List</button>
+          </div>
+          <button type="button" class="btn-primary" id="newDeal">+ New deal</button>
+        </div>
+
+        <p class="showing" id="showing"></p>
+        <div class="board-wrap" id="boardView"><div class="board" id="board"></div></div>
+        <div class="list-card" id="listView" hidden></div>
+      </section>
+
+      <section id="panel-companies" class="stub" hidden><h3>Companies</h3><p>Not part of this preview.</p></section>
+      <section id="panel-contacts" class="stub" hidden><h3>Contacts</h3><p>Not part of this preview.</p></section>
     </main>
   </div>
+  <div class="toast" id="toast" role="status" hidden></div>
 
   <script>
 (function () {
   "use strict";
 
   var STAGES = [
-    { id: "prospect", name: "Prospect", bar: "var(--op-cat-1)" },
-    { id: "contacted", name: "Contacted", bar: "var(--op-cat-2)" },
-    { id: "qualified", name: "Qualified", bar: "var(--op-cat-3)" },
-    { id: "quote", name: "Quote Issued", bar: "var(--op-cat-5)" },
-    { id: "closed", name: "Closed", bar: "var(--op-cat-6)" }
+    { id: "prospect", name: "Prospect" }, { id: "contacted", name: "Contacted" }, { id: "qualified", name: "Qualified" },
+    { id: "quote", name: "Quote Issued" }, { id: "closed", name: "Closed" }
   ];
 
-  // Sample deals on the board
+  // Sample deals: [id, company, value, owner, tier, created, stage, result, rfq, quote]
   var DEALS = [
-    { customer: "Srtc exim ltd", value: 3330, owner: "Kayode Akintade", stage: "prospect" },
-    { customer: "Autochek", value: 12500, owner: "Aishat Jimoh", stage: "prospect" },
-    { customer: "Goshen agro", value: 18580, owner: "Deborah Oje", stage: "prospect" },
-    { customer: "Tamrose limited", value: 8320, owner: "Babatope Ayeni", stage: "qualified" },
-    { customer: "Alliance chemicals", value: 54000, owner: "Gift Osaremen", stage: "qualified" },
-    { customer: "Quest hill", value: 85000, owner: "Deborah Oje", stage: "quote" },
-    { customer: "Powerpro", value: 2080, owner: "Kayode Akintade", stage: "quote" },
-    { customer: "Bioscape commodities africa", value: 11000, owner: "Adeshewa Adelowotan", stage: "closed", result: "won" },
-    { customer: "Quest hill", value: 25000, owner: "Aishat Jimoh", stage: "closed", result: "won" },
-    { customer: "Limeswood", value: 6400, owner: "Gift Osaremen", stage: "closed", result: "lost" }
-  ];
+    ["OP-26-11-021", "Ovuvuenem", 200, "Emmanuel Akinrodolu", "Growth", "05-11-2026", "prospect"],
+    ["OP-26-11-020", "Brian's logistics", 2000, "Kimeen Ugwu", "Growth", "05-11-2026", "prospect"],
+    ["OP-26-10-018", "Fast track export", 2300, "Nkechi Moses", "Growth", "29-10-2026", "prospect"],
+    ["OP-26-10-017", "Quest hill", 50000, "Deborah Oje", "Enterprise", "27-10-2026", "prospect"],
+    ["OP-26-11-022", "Fast track export", 4000, "Sotonye Ebadan", "Growth", "06-11-2026", "contacted"],
+    ["OP-26-10-016", "Fast track export", 20000, "Nkechi Moses", "Growth", "19-10-2026", "contacted"],
+    ["OP-26-10-014", "Tamrose limited", 10000, "Kayode Akintade", "SME", "15-10-2026", "contacted"],
+    ["OP-26-08-009", "Airtel networks limited", 0, "Gift Osaremen", "Enterprise", "24-08-2026", "contacted"],
+    ["OP-26-11-023", "Manuchar Trading House Int Nigeria", 3500, "Kayode Akintade", "Enterprise", "03-11-2026", "qualified", null, "RFQ-26-11-015"],
+    ["OP-26-09-012", "Regency overseas (rol)", 10900, "Gift Osaremen", "SME", "22-09-2026", "qualified"],
+    ["OP-26-09-011", "Alliance chemicals global", 550, "Gift Osaremen", "SME", "08-09-2026", "qualified"],
+    ["OP-26-09-010", "Powerpro", 2080, "Aishat Jimoh", "SME", "05-09-2026", "qualified"],
+    ["OP-26-08-007", "Bioscape commodities africa", 8700, "Adeshewa Adelowotan", "Growth", "18-08-2026", "qualified"],
+    ["OP-26-11-024", "Manuchar Trading House Int Nigeria", 73, "Kayode Akintade", "Enterprise", "04-11-2026", "quote", null, null, "Q-26-11-017"],
+    ["OP-26-09-008", "Eunisell", 5200, "Aishat Jimoh", "SME", "03-09-2026", "quote"],
+    ["OP-26-07-004", "Ovuvuenem", 2000, "Emmanuel Akinrodolu", "Enterprise", "15-07-2026", "quote"],
+    ["OP-26-07-003", "Sterling bank", 40000, "Deborah Oje", "Enterprise", "08-07-2026", "quote", null, null, "Q-26-07-005"],
+    ["OP-26-06-002", "Goshen agro", 4445, "Kimeen Ugwu", "Growth", "20-06-2026", "quote"],
+    ["OP-26-11-019", "Fast track export", 1000, "Nkechi Moses", "Growth", "04-11-2026", "closed", "won"],
+    ["OP-26-10-015", "Fast track export", 30000, "Nkechi Moses", "SME", "09-10-2026", "closed", "won"],
+    ["OP-26-10-013", "Fast track export", 20000, "Nkechi Moses", "SME", "09-10-2026", "closed", "won"],
+    ["OP-26-06-001", "Limeswood", 6400, "Gift Osaremen", "SME", "02-06-2026", "closed", "lost"]
+  ].map(function (d) {
+    return { id: d[0], company: d[1], value: d[2], owner: d[3], tier: d[4], created: d[5], stage: d[6], result: d[7] || null, rfq: d[8] || null, quote: d[9] || null };
+  });
 
+  function $(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -177,58 +298,144 @@ body {
     var ini = name.split(" ").map(function (w) { return w.charAt(0); }).join("").slice(0, 2).toUpperCase();
     return '<span class="avatar avatar-' + (hash(name) % 4 + 1) + '" aria-hidden="true">' + esc(ini) + "</span>";
   }
+  function dateKey(d) { var p = d.split("-"); return (p[2] || "") + (p[1] || "") + (p[0] || ""); } // dd-mm-yyyy -> yyyymmdd
+  var DOC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 
   // ---------- Deal passed in from the dashboard ----------
   var q = new URLSearchParams(location.search);
   var focus = null;
-  if (q.get("customer")) {
+  if (q.get("deal") && q.get("customer")) {
     var stage = q.get("stage") || "prospect";
     var result = stage === "closed-won" ? "won" : stage === "closed-lost" ? "lost" : null;
     if (result) stage = "closed";
     if (!STAGES.some(function (s) { return s.id === stage; })) stage = "prospect";
-    var customer = q.get("customer");
-    // The deal moves: take any card for this customer out of the earlier stages
-    DEALS = DEALS.filter(function (d) { return d.customer !== customer || d.stage === "closed"; });
-    focus = { customer: customer, value: Number(q.get("value")) || 0, owner: q.get("owner") || "", stage: stage,
-      result: result, deal: q.get("deal"), note: q.get("note"), focus: true };
-    DEALS.unshift(focus);
+    var link = q.get("rfqlink");
+    focus = {
+      id: q.get("deal"), company: q.get("customer"), value: Number(q.get("value")) || 0, owner: q.get("owner") || "",
+      tier: null, created: q.get("created") || "", stage: stage, result: result, rfq: q.get("rfq"),
+      rfqHref: link && /^rfq\.html\?/.test(link) ? link : null, // only ever link to the local RFQ table
+      quote: null, note: q.get("note"), focus: true
+    };
+    DEALS = DEALS.filter(function (d) { return d.id !== focus.id; });
+    DEALS.push(focus);
+  }
+
+  // ---------- Filters ----------
+  var state = { q: "", owner: "", status: "", sort: "new", view: "board" };
+  var owners = DEALS.map(function (d) { return d.owner; }).filter(function (o, i, a) { return o && a.indexOf(o) === i; }).sort();
+  $("owner").innerHTML += owners.map(function (o) { return "<option>" + esc(o) + "</option>"; }).join("");
+
+  function filtered() {
+    var s = state.q.toLowerCase();
+    var list = DEALS.filter(function (d) {
+      var st = d.result || "open";
+      return (!s || [d.id, d.company, d.owner, d.rfq, d.quote].join(" ").toLowerCase().indexOf(s) !== -1) &&
+        (!state.owner || d.owner === state.owner) && (!state.status || st === state.status);
+    });
+    return list.sort(function (a, b) {
+      if (state.sort === "value") return b.value - a.value;
+      var c = dateKey(b.created).localeCompare(dateKey(a.created)) || b.id.localeCompare(a.id);
+      return state.sort === "old" ? -c : c;
+    });
+  }
+
+  function renderStats() {
+    var open = DEALS.filter(function (d) { return d.stage !== "closed"; });
+    var won = DEALS.filter(function (d) { return d.result === "won"; });
+    var sum = function (l) { return l.reduce(function (t, d) { return t + d.value; }, 0); };
+    var stat = function (cls, label, value, vcls, sub, icon) {
+      return '<div class="stat ' + cls + '"><div class="stat-label">' + label + '</div><span class="stat-icon" aria-hidden="true">' + icon +
+        '</span><div class="stat-value ' + vcls + '">' + value + '</div><div class="stat-sub">' + sub + "</div></div>";
+    };
+    $("stats").innerHTML =
+      stat("highlight", "Active pipeline (USD)", money(sum(open)), "", open.length + " deals in progress",
+        '<svg viewBox="0 0 24 24"><path d="M5 19V11M12 19V5M19 19v-6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>') +
+      stat("", "Deals won (USD)", money(sum(won)), "gold", won.length + " deals won",
+        '<svg viewBox="0 0 24 24"><path d="M7 4h10v4a5 5 0 01-10 0zM12 13v4M8 20h8M7 6H4v1a3 3 0 003 3M17 6h3v1a3 3 0 01-3 3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') +
+      stat("", "Total deals", DEALS.length, "", "All-time deals",
+        '<svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>');
+  }
+
+  function refs(d) {
+    var r = "";
+    if (d.rfq) r += (d.rfqHref ? '<a class="ref ref-rfq" href="' + esc(d.rfqHref) + '" title="Open in the RFQ table">' : '<span class="ref ref-rfq">') +
+      DOC + esc(d.rfq) + (d.rfqHref ? "</a>" : "</span>");
+    if (d.quote) r += '<span class="ref ref-quote">' + DOC + esc(d.quote) + "</span>";
+    return r ? '<div class="refs">' + r + "</div>" : "";
+  }
+  function card(d) {
+    return '<article class="card' + (d.focus ? " focus" : "") + '"' + (d.focus ? ' id="focusCard" tabindex="-1"' : "") + ">" +
+      '<div class="card-main"><div class="card-id">' + esc(d.id) + (d.focus ? '<span class="from-tag">From dashboard</span>' : "") + "</div>" +
+      '<div class="card-top"><span>' + esc(d.company) + "</span><b>" + money(d.value) + "</b></div>" +
+      '<div class="owner-row"><span class="owner">' + avatar(d.owner) + "<span>" + esc(d.owner) + "</span></span>" +
+      (d.tier ? '<span class="tier tier-' + d.tier.toLowerCase() + '">' + esc(d.tier) + "</span>" : "") + "</div>" +
+      (d.note ? '<div class="card-note">' + esc(d.note) + "</div>" : "") + "</div>" +
+      '<div class="card-foot"><span>Created ' + esc(d.created) + "</span>" +
+      (d.result === "won" ? '<span class="won">✓ Won</span>' : d.result === "lost" ? '<span class="lost">✕ Lost</span>' : "") +
+      refs(d) + "</div></article>";
   }
 
   function render() {
-    document.getElementById("board").innerHTML = STAGES.map(function (st, i) {
-      var deals = DEALS.filter(function (d) { return d.stage === st.id; });
+    var list = filtered();
+    $("showing").innerHTML = "Showing <b>" + list.length + "</b> of " + DEALS.length + " deals";
+    $("board").innerHTML = STAGES.map(function (st, i) {
+      var deals = list.filter(function (d) { return d.stage === st.id; });
       var total = deals.reduce(function (t, d) { return t + d.value; }, 0);
       var count = st.id === "closed"
         ? deals.filter(function (d) { return d.result === "won"; }).length + " won · " + deals.filter(function (d) { return d.result === "lost"; }).length + " lost"
         : deals.length + " · " + money(total);
-      return '<section class="col" style="--bar:' + st.bar + '" aria-labelledby="st-' + st.id + '">' +
-        '<div class="col-head"><span class="stage-num">' + (i + 1) + '</span><h2 id="st-' + st.id + '">' + esc(st.name) + "</h2></div>" +
-        '<span class="col-bar"></span><p class="col-count">' + count + "</p>" +
-        '<div class="cards">' + (deals.length ? deals.map(card).join("") : '<div class="empty">No deals</div>') + "</div></section>";
+      return '<section class="col" aria-labelledby="st-' + st.id + '"><div class="col-head"><span class="stage-num' + (st.id === "closed" ? " closed" : "") + '">' + (i + 1) +
+        '</span><h2 id="st-' + st.id + '">' + esc(st.name) + '</h2></div><p class="col-count">' + count + "</p>" +
+        '<div class="cards">' + (deals.length ? deals.map(card).join("") : '<div class="empty-col">No deals</div>') + "</div></section>";
     }).join("");
-  }
-  function card(d) {
-    return '<article class="card' + (d.focus ? " focus" : "") + '"' + (d.focus ? ' id="focusCard" tabindex="-1"' : "") + ">" +
-      (d.deal ? '<span class="tag tag-deal">' + esc(d.deal) + "</span>" : "") +
-      '<div class="card-top"><span title="' + esc(d.customer) + '">' + esc(d.customer) + "</span><b>" + money(d.value) + "</b></div>" +
-      (d.owner ? '<span class="owner">' + avatar(d.owner) + esc(d.owner) + "</span>" : "") +
-      (d.note ? '<span class="note">' + esc(d.note) + "</span>" : "") +
-      (d.result === "won" ? '<span class="tag tag-won">✓ Won</span>' : d.result === "lost" ? '<span class="tag tag-lost">✕ Lost</span>' : "") +
-      "</article>";
+    $("listView").innerHTML = "<table><thead><tr><th>Deal ID</th><th>Company</th><th>Stage</th><th>Owner</th><th>Tier</th><th>Value</th><th>Created</th><th>RFQ / Quote</th></tr></thead><tbody>" +
+      list.map(function (d) {
+        var stage = STAGES.filter(function (s) { return s.id === d.stage; })[0].name + (d.result ? " · " + (d.result === "won" ? "Won" : "Lost") : "");
+        return "<tr" + (d.focus ? ' class="focus"' : "") + "><td>" + esc(d.id) + '</td><td class="co">' + esc(d.company) + "</td><td>" + esc(stage) + "</td>" +
+          '<td><span class="owner">' + avatar(d.owner) + "<span>" + esc(d.owner) + "</span></span></td>" +
+          "<td>" + (d.tier ? '<span class="tier tier-' + d.tier.toLowerCase() + '" style="margin:0">' + esc(d.tier) + "</span>" : "—") + "</td>" +
+          '<td class="val">' + money(d.value) + "</td><td>" + esc(d.created) + "</td><td>" + (esc([d.rfq, d.quote].filter(Boolean).join(" · ")) || "—") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+    $("boardView").hidden = state.view !== "board";
+    $("listView").hidden = state.view !== "list";
   }
 
+  $("search").addEventListener("input", function () { state.q = this.value.trim(); render(); });
+  $("owner").addEventListener("change", function () { state.owner = this.value; render(); });
+  $("status").addEventListener("change", function () { state.status = this.value; render(); });
+  $("sort").addEventListener("change", function () { state.sort = this.value; render(); });
+  function setView(v) {
+    state.view = v;
+    $("viewBoard").setAttribute("aria-pressed", String(v === "board"));
+    $("viewList").setAttribute("aria-pressed", String(v === "list"));
+    render();
+  }
+  $("viewBoard").addEventListener("click", function () { setView("board"); });
+  $("viewList").addEventListener("click", function () { setView("list"); });
+  var toastTimer;
+  $("newDeal").addEventListener("click", function () {
+    var t = $("toast"); t.textContent = "Creating deals isn't part of this preview."; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2500);
+  });
+  document.querySelector(".tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]"); if (!b) return;
+    document.querySelectorAll(".tab").forEach(function (t) { var on = t === b; t.classList.toggle("active", on); t.setAttribute("aria-selected", String(on)); });
+    ["pipeline", "companies", "contacts"].forEach(function (id) { $("panel-" + id).hidden = id !== b.getAttribute("data-tab"); });
+  });
+
+  renderStats();
   render();
 
   if (focus) {
     var stageName = STAGES.filter(function (s) { return s.id === focus.stage; })[0].name;
-    var banner = document.getElementById("banner");
-    banner.innerHTML = "<span>Showing <b>" + esc(focus.customer) + "</b>" + (focus.deal ? " from " + esc(focus.deal) : "") +
-      " in <b>" + esc(stageName) + (focus.result ? " (" + focus.result + ")" : "") + "</b>" +
-      (focus.note ? " · " + esc(focus.note) : "") + '</span><button type="button" class="clear" id="clear">Show all deals</button>';
+    var banner = $("banner");
+    banner.innerHTML = "<span>Showing <b>" + esc(focus.company) + "</b> (" + esc(focus.id) + ") in <b>" + esc(stageName) +
+      (focus.result ? " · " + (focus.result === "won" ? "Won" : "Lost") : "") + "</b>" + (focus.note ? " · " + esc(focus.note) : "") +
+      '</span><button type="button" class="link-btn" id="clear">Show all deals</button>';
     banner.hidden = false;
-    document.getElementById("clear").addEventListener("click", function () { location.href = "crm.html"; });
-    var el = document.getElementById("focusCard");
-    el.scrollIntoView({ block: "nearest", inline: "center" });
+    $("clear").addEventListener("click", function () { location.href = "crm.html"; });
+    var el = $("focusCard");
+    el.scrollIntoView({ block: "center", inline: "center" });
     el.focus({ preventScroll: true });
   }
 })();
