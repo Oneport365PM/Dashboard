@@ -199,6 +199,9 @@ tr.focus td { background: rgba(191, 251, 79, .28); }
       <a class="rail-btn" href="rfq.html" aria-label="RFQ" title="RFQ">
         <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
       </a>
+      <a class="rail-btn" href="quotes.html" aria-label="Quotes" title="Quotes">
+        <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </a>
     </nav>
 
     <main class="main">
@@ -314,7 +317,8 @@ tr.focus td { background: rgba(191, 251, 79, .28); }
       id: q.get("deal"), company: q.get("customer"), value: Number(q.get("value")) || 0, owner: q.get("owner") || "",
       tier: null, created: q.get("created") || "", stage: stage, result: result, rfq: q.get("rfq"),
       rfqHref: link && /^rfq\.html\?/.test(link) ? link : null, // only ever link to the local RFQ table
-      quote: null, note: q.get("note"), focus: true
+      quote: q.get("quote"), quoteHref: /^quotes\.html\?/.test(q.get("quotelink") || "") ? q.get("quotelink") : null,
+      note: q.get("note"), focus: true
     };
     DEALS = DEALS.filter(function (d) { return d.id !== focus.id; });
     DEALS.push(focus);
@@ -360,7 +364,8 @@ tr.focus td { background: rgba(191, 251, 79, .28); }
     var r = "";
     if (d.rfq) r += (d.rfqHref ? '<a class="ref ref-rfq" href="' + esc(d.rfqHref) + '" title="Open in the RFQ table">' : '<span class="ref ref-rfq">') +
       DOC + esc(d.rfq) + (d.rfqHref ? "</a>" : "</span>");
-    if (d.quote) r += '<span class="ref ref-quote">' + DOC + esc(d.quote) + "</span>";
+    if (d.quote) r += (d.quoteHref ? '<a class="ref ref-quote" href="' + esc(d.quoteHref) + '" title="Open the quote">' : '<span class="ref ref-quote">') +
+      DOC + esc(d.quote) + (d.quoteHref ? "</a>" : "</span>");
     return r ? '<div class="refs">' + r + "</div>" : "";
   }
   function card(d) {

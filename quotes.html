@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OnePort365 Quotes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Open+Sans:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="design/tokens.css" />
+  <style>
+/*
+  OnePort365 Quotes — list and quote document.
+  Mirrors the backoffice Quotes screen, built on design/tokens.css.
+  Opened from a shipment's "Quote issued" link with
+  ?deal=&customer=&quote=&rfq=&mode=&owner=&value=&status=&pol=&polcode=&pod=&podcode=&issued=
+  — that quote is added to the list and opened.
+*/
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--op-cream); color: var(--op-silver-dark);
+  font-family: var(--op-font-body); font-size: 14px; font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--op-dark-green); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+.shell { display: flex; min-height: 100%; }
+.rail {
+  width: 72px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; background: var(--op-dark-green);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 0;
+}
+.rail-mark {
+  width: 40px; height: 40px; border-radius: 12px; margin-bottom: 14px; background: var(--op-accent-lime); color: var(--op-dark-green);
+  display: flex; align-items: center; justify-content: center; font-family: var(--op-font-display); font-weight: 700; font-size: 14px;
+}
+.rail-btn { width: 44px; height: 44px; border-radius: var(--op-radius-md); display: flex; align-items: center; justify-content: center; color: var(--op-light-green); }
+.rail-btn svg { width: 22px; height: 22px; }
+.rail-btn:hover { background: rgba(255,255,255,.1); color: var(--op-white); }
+.rail-btn.active { background: var(--op-accent-lime); color: var(--op-dark-green); }
+.main { flex: 1; min-width: 0; padding: 20px max(24px, env(safe-area-inset-right, 0px)) 32px max(24px, env(safe-area-inset-left, 0px)); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--op-dark-green); font-weight: 700; font-size: 13px; }
+.back svg { width: 14px; height: 14px; }
+.back:hover { text-decoration: underline; }
+.top h1 { margin: 4px 0 0; font-family: var(--op-font-display); font-weight: 700; font-size: 22px; color: var(--op-dark-green); }
+
+.focus-banner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding: 12px 14px;
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-left: 4px solid var(--op-accent-lime);
+  border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); line-height: 1.45;
+}
+.focus-banner.warn { border-left-color: var(--op-gold); }
+.focus-banner b { color: var(--op-dark-green); }
+
+.panes { display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start; }
+.pane { background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); min-width: 0; }
+
+/* ---------- List pane ---------- */
+.list-pane { position: sticky; top: 20px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; overflow: hidden; }
+.list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 16px 10px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--op-silver-dark); }
+.search {
+  display: flex; align-items: center; gap: 8px; margin: 0 16px 10px; height: 36px; padding: 0 10px;
+  border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md);
+}
+.search svg { width: 15px; height: 15px; color: var(--op-silver-dark); flex-shrink: 0; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; font-size: 13px; }
+.search:focus-within { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); }
+.qtabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--op-border-card); overflow-x: auto; scrollbar-width: thin; }
+.qtab {
+  flex-shrink: 0; padding: 10px 8px; margin-bottom: -1px; background: none; border: 0; border-bottom: 2px solid transparent;
+  cursor: pointer; font-size: 12px; color: var(--op-silver-dark); white-space: nowrap;
+}
+.qtab.active { color: var(--op-dark-green); font-weight: 700; border-bottom-color: var(--op-dark-green); }
+.list-count { margin: 0; padding: 10px 16px; font-size: 12px; color: var(--op-silver-dark); border-bottom: 1px solid var(--op-border-divider); }
+.qlist { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+.qitem {
+  width: 100%; display: block; text-align: left; cursor: pointer; background: none; border: 0; border-bottom: 1px solid var(--op-border-divider);
+  border-left: 3px solid transparent; padding: 14px 16px 14px 15px;
+}
+.qitem:hover { background: var(--op-cream); }
+.qitem.on { background: rgba(191, 251, 79, .22); border-left-color: var(--op-dark-green); }
+.qitem-top { display: flex; justify-content: space-between; align-items: center; gap: 6px 8px; flex-wrap: wrap; }
+.qitem-no { font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); white-space: nowrap; }
+.list-head, .list-pane .search, .qtabs, .list-count { flex-shrink: 0; }
+.qitem-co { margin-top: 8px; color: var(--op-dark-green); }
+.qitem-svc { margin-top: 3px; font-size: 12px; font-weight: 600; color: var(--op-dark-green); }
+.qitem-route { margin-top: 3px; font-size: 12px; color: var(--op-silver-light); }
+.qitem-date { margin-top: 3px; font-size: 12px; color: var(--op-silver-light); }
+.qempty { padding: 28px 16px; text-align: center; color: var(--op-silver-light); }
+
+.chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--op-radius-sm); white-space: nowrap; }
+.st-pending { background: var(--op-chip-warning-bg); color: var(--op-chip-warning-text); }
+.st-ready { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); }
+.st-awaiting { background: var(--op-light-green); color: var(--op-dark-green); }
+.st-accepted { background: var(--op-dark-green); color: var(--op-accent-lime); }
+.st-declined { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
+.from-tag { margin-left: 6px; padding: 1px 6px; border-radius: var(--op-radius-sm); background: var(--op-dark-green); color: var(--op-accent-lime); font-size: 10px; font-weight: 700; }
+
+/* ---------- Detail pane ---------- */
+.detail-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 14px 18px; border-bottom: 1px solid var(--op-border-card);
+}
+.detail-title { min-width: 0; }
+.detail-title b { font-family: var(--op-font-display); font-weight: 700; font-size: 15px; color: var(--op-dark-green); margin-right: 8px; }
+.detail-title span { font-size: 13px; color: var(--op-silver-light); }
+.detail-actions { display: flex; gap: 8px; }
+.select {
+  height: 38px; min-width: 190px; padding: 0 12px; cursor: pointer; background: var(--op-white);
+  border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md); color: var(--op-dark-green);
+}
+.select:focus { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); outline: none; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; cursor: pointer;
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md);
+  font-family: var(--op-font-display); font-weight: 600; font-size: 12px; color: var(--op-dark-green);
+}
+.btn svg { width: 15px; height: 15px; }
+.btn:hover { border-color: var(--op-dark-green); }
+.detail-body { padding: 20px; background: rgba(209, 219, 189, .18); border-radius: 0 0 var(--op-radius-lg) var(--op-radius-lg); }
+.doc-wrap { max-width: 860px; margin: 0 auto; }
+
+.approval {
+  display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; margin-bottom: 16px;
+  background: var(--op-chip-success-bg); border: 1px solid rgba(15, 122, 69, .25); border-radius: var(--op-radius-lg); color: var(--op-silver-dark);
+}
+.approval.pending { background: var(--op-chip-warning-bg); border-color: rgba(138, 106, 0, .25); }
+.approval.declined { background: var(--op-chip-error-bg); border-color: rgba(204, 20, 20, .2); }
+.approval svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; color: var(--op-chip-success-text); }
+.approval.pending svg { color: var(--op-chip-warning-text); }
+.approval.declined svg { color: var(--op-chip-error-text); }
+.approval h3 { margin: 0 0 4px; font-family: var(--op-font-display); font-weight: 600; font-size: 14px; color: var(--op-dark-green); }
+.approval p { margin: 0; font-size: 12px; line-height: 1.5; }
+.approval b { color: var(--op-dark-green); }
+
+.doc { background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); padding: 24px; }
+.doc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 10px; background: var(--op-dark-green); color: var(--op-accent-lime);
+  display: flex; align-items: center; justify-content: center; font-family: var(--op-font-display); font-weight: 700; font-size: 13px;
+}
+.brand-name { font-family: var(--op-font-display); font-weight: 600; font-size: 18px; color: var(--op-dark-green); line-height: 1; }
+.brand-name small { display: block; font-weight: 700; font-size: 14px; }
+.doc-no { text-align: right; }
+.doc-no b { display: block; font-family: var(--op-font-display); font-weight: 700; font-size: 18px; color: var(--op-dark-green); }
+.doc-no span { display: block; margin-top: 4px; font-size: 13px; color: var(--op-silver-dark); }
+.doc-no .valid { color: var(--op-chip-warning-text); font-weight: 600; }
+.doc-no .expired { color: var(--op-chip-error-text); font-weight: 600; }
+.address { margin: 22px 0 0; padding-bottom: 18px; border-bottom: 1px solid var(--op-border-divider); font-size: 13px; color: var(--op-silver-dark); }
+.section-h { display: flex; align-items: baseline; gap: 12px; margin: 22px 0 16px; }
+.section-h h4 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 15px; color: var(--op-dark-green); }
+.section-h a, .section-h span { font-size: 12px; color: var(--op-silver-light); }
+.section-h a { color: var(--op-dark-green); font-weight: 700; text-decoration: none; border-bottom: 1.5px solid var(--op-dark-green); }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 20px; margin: 0; }
+.grid dt { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--op-silver-light); margin-bottom: 6px; }
+.grid dd { margin: 0; color: var(--op-silver-dark); overflow-wrap: anywhere; line-height: 1.45; }
+.grid dd.strong { font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); }
+.box { margin-top: 20px; padding: 16px; border: 1px solid var(--op-border-card); border-radius: var(--op-radius-lg); background: var(--op-cream); }
+.box .eyebrow { display: block; margin-bottom: 14px; }
+.charges { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.charges th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--op-silver-dark); background: rgba(209, 219, 189, .35); }
+.charges td { padding: 10px 12px; border-top: 1px solid var(--op-border-divider); }
+.charges .num { text-align: right; white-space: nowrap; }
+.charges tfoot td { border-top: 1.5px solid var(--op-dark-green); font-family: var(--op-font-display); font-weight: 700; color: var(--op-dark-green); }
+.charges tfoot .num { color: var(--op-chip-warning-text); font-size: 16px; }
+
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  .panes { grid-template-columns: 1fr; }
+  .list-pane { position: static; max-height: 420px; }
+}
+@media (max-width: 700px) {
+  .shell { flex-direction: column; }
+  .rail { width: 100%; height: auto; flex-direction: row; z-index: 20; padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
+  .rail-mark { margin: 0 8px 0 0; }
+  .main { padding: 16px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+  .detail-body { padding: 12px; }
+  .doc { padding: 16px; }
+  .select { min-width: 0; flex: 1; }
+  .detail-actions { width: 100%; }
+}
+@media print {
+  .rail, .top, .focus-banner, .list-pane, .detail-head { display: none !important; }
+  .panes { display: block; }
+  .main, .detail-body { padding: 0; background: none; }
+  .pane, .doc { border: 0; box-shadow: none; }
+}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="rail" aria-label="Main">
+      <span class="rail-mark" aria-hidden="true">OP</span>
+      <a class="rail-btn" href="index.html" aria-label="Operations dashboard" title="Operations dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      </a>
+      <a class="rail-btn" href="crm.html" aria-label="CRM board" title="CRM board">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="10" y="4" width="5" height="10" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="17" y="4" width="4" height="13" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </a>
+      <a class="rail-btn" href="rfq.html" aria-label="RFQ" title="RFQ">
+        <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </a>
+      <a class="rail-btn active" href="quotes.html" aria-current="page" aria-label="Quotes" title="Quotes">
+        <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </a>
+    </nav>
+
+    <main class="main">
+      <div class="top">
+        <div>
+          <a class="back" href="index.html">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to dashboard
+          </a>
+          <h1>Quotes</h1>
+        </div>
+      </div>
+
+      <div class="focus-banner" id="banner" role="status" hidden></div>
+
+      <div class="panes">
+        <aside class="pane list-pane" aria-label="Quotes list">
+          <div class="list-head"><span class="eyebrow">All quotes</span></div>
+          <label class="search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="search" id="search" placeholder="Search quote, RFQ or company" aria-label="Search quotes" autocomplete="off" />
+          </label>
+          <div class="qtabs" id="tabs" role="tablist" aria-label="Quote status"></div>
+          <p class="list-count" id="count"></p>
+          <ul class="qlist" id="list"></ul>
+        </aside>
+
+        <section class="pane" aria-label="Quote" id="detail"></section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  var AS_OF = new Date(2026, 10, 10, 12, 0); // sample data is dated up to 10 Nov 2026
+  var VALID_DAYS = 14;
+  var TABS = [
+    { id: "Pending approval", cls: "pending" }, { id: "Ready", cls: "ready" }, { id: "Awaiting customer", cls: "awaiting" },
+    { id: "Accepted", cls: "accepted" }, { id: "Declined", cls: "declined" }
+  ];
+  function tabOf(status) { return TABS.filter(function (t) { return t.id === status; })[0] || TABS[1]; }
+
+  // Sample quotes: [no, company, contact, service, pol, polcode, pod, podcode, issued, status, rfq, goods value]
+  var QUOTES = [
+    ["Q-26-11-006", "Agventure commodities limited", "Tunde Bello", "Ocean Freight · FCL", "Shanghai, China", "CNSHA", "Apapa, Nigeria", "NGAPP", "2026-11-08T10:20", "Pending approval", "RFQ-26-11-006", 18400],
+    ["Q-26-11-005", "Fast Track Export", "Ifeanyi Obi", "Air Freight", "Beijing, China", "NAY", "Lagos, Nigeria", "LOS", "2026-11-07T15:05", "Pending approval", "RFQ-26-11-005", 2600],
+    ["Q-26-11-004", "Bpaas Docs Test Co Mv8zm7rw", "Grace Okafor", "Ocean Freight · FCL", "Apapa, Nigeria", "NGAPP", "Antwerpen, Belgium", "BEANR", "2026-11-03T12:31", "Ready", "RFQ-26-11-004", 600],
+    ["Q-26-10-047", "Gil Automation", "Lars Madsen", "Ocean Freight · FCL", "Aarhus, Denmark", "DKAAR", "Aalborg, Denmark", "DKAAL", "2026-10-20T09:40", "Ready", "RFQ-26-10-047", 7200],
+    ["Q-26-10-024", "Fast Track Export", "Ifeanyi Obi", "Ocean Freight · FCL", "Changshu, China", "CNCGS", "Apapa, Nigeria", "NGAPP", "2026-10-12T11:15", "Ready", "RFQ-26-10-024", 12500],
+    ["OPQT-014", "Tara Farms Ltd", "Amaka Eze", "Ocean Freight · FCL", "Barcelona, Spain", "ESBCN", "Apapa, Nigeria", "NGAPP", "2026-09-21T14:10", "Ready", "RFQ-26-09-014", 9800],
+    ["OPQT-007", "Eunisell", "Chinedu Okoro", "Customs Brokerage", "Aviles, Spain", "ESAVS", "Al Hidd, Bahrain", "BHKBS", "2026-09-20T16:45", "Ready", "RFQ-26-09-007", 5200],
+    ["Q-26-10-040", "Regency overseas (rol)", "Priya Nair", "Ocean Freight · FCL", "Mumbai (Nhava Sheva), India", "INNSA", "Apapa, Nigeria", "NGAPP", "2026-10-18T10:00", "Awaiting customer", "RFQ-26-10-040", 10900],
+    ["Q-26-07-005", "Sterling bank", "Femi Adewale", "Ocean Freight · FCL", "Antwerp, Belgium", "BEANR", "Apapa, Nigeria", "NGAPP", "2026-07-10T13:20", "Awaiting customer", "RFQ-26-07-005", 40000],
+    ["Q-26-10-031", "Fast track export", "Ifeanyi Obi", "Ocean Freight · FCL", "Ningbo, China", "CNNGB", "Tin Can, Nigeria", "NGTIN", "2026-10-07T09:30", "Accepted", "RFQ-26-10-031", 30000],
+    ["Q-26-06-002", "Limeswood", "Bola Ade", "Ocean Freight · FCL", "Rotterdam, Netherlands", "NLRTM", "Apapa, Nigeria", "NGAPP", "2026-06-04T11:00", "Declined", "RFQ-26-06-002", 6400]
+  ].map(function (r) {
+    return { no: r[0], company: r[1], contact: r[2], service: r[3], pol: r[4], polcode: r[5], pod: r[6], podcode: r[7],
+      issued: r[8], status: r[9], rfq: r[10], value: r[11] };
+  });
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function hash(str) { var x = 2166136261; for (var i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
+  function usd(n) { return "USD " + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function parseIssued(s) { var m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(s || ""); return m ? new Date(+m[1], m[2] - 1, +m[3], +(m[4] || 9), +(m[5] || 0)) : null; }
+  function fmtDate(d) { return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+  function fmtDateTime(d) { return fmtDate(d) + ", " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }); }
+  function isoDay(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+
+  // ---------- Quote passed in from the dashboard ----------
+  var q = new URLSearchParams(location.search);
+  var focusNo = q.get("quote");
+  var deal = q.get("deal");
+  if (focusNo) {
+    var mode = q.get("mode") || "Ocean freight";
+    var air = /air/i.test(mode);
+    var status = TABS.some(function (t) { return t.id === q.get("status"); }) ? q.get("status") : "Ready";
+    QUOTES = QUOTES.filter(function (x) { return x.no !== focusNo; });
+    QUOTES.unshift({
+      no: focusNo, company: q.get("customer") || "", contact: "", service: air ? "Air Freight" : "Ocean Freight · FCL",
+      pol: q.get("pol") || "", polcode: q.get("polcode") || "", pod: q.get("pod") || "", podcode: q.get("podcode") || "",
+      issued: q.get("issued") || "", status: status, rfq: q.get("rfq") || "", value: Number(q.get("value")) || 0,
+      owner: q.get("owner") || "", deal: deal, focus: true
+    });
+  }
+
+  // Details that aren't in the list data, derived so every viewer sees the same quote
+  function details(x) {
+    var h = hash(x.no);
+    var air = /air/i.test(x.service);
+    var customs = /customs/i.test(x.service);
+    var base = Math.max(400, Math.round(x.value * 0.09 / 10) * 10 + 350);
+    var lines = customs
+      ? [["Customs clearance", base], ["Documentation & filing", 120], ["Terminal handling", Math.round(base * 0.35)]]
+      : air
+      ? [["Air freight", base], ["Origin handling", Math.round(base * 0.18)], ["Destination handling", Math.round(base * 0.22)], ["Airway bill fee", 65]]
+      : [["Ocean freight", base], ["Origin charges", Math.round(base * 0.2)], ["Destination charges (THC)", Math.round(base * 0.28)], ["Bill of lading fee", 85]];
+    return {
+      lines: lines, total: lines.reduce(function (t, l) { return t + l[1]; }, 0),
+      cls: "FAK", commodity: ["Zips", "Machine parts", "Agro produce", "Packaged foods", "Chemicals (non-haz)"][h % 5],
+      size: air ? "—" : ["20 FT", "40 FT", "40 FT HC"][h % 3], type: air ? "Loose cargo" : "Dry",
+      count: air ? (h % 40) + 4 : (h % 3) + 1, weight: ((h % 18) + 2) * (air ? 25 : 500),
+      incoterms: ["FCA", "FOB", "CIF", "EXW"][h % 4], branch: "Lagos"
+    };
+  }
+
+  // ---------- List ----------
+  var state = { tab: focusNo ? tabOf(QUOTES[0].status).id : "Ready", q: "", selected: focusNo || null };
+  function inTab(x) { return x.status === state.tab; }
+  function matches(x) {
+    var s = state.q.toLowerCase();
+    return !s || [x.no, x.rfq, x.company, x.pol, x.pod].join(" ").toLowerCase().indexOf(s) !== -1;
+  }
+  function renderTabs() {
+    $("tabs").innerHTML = TABS.map(function (t) {
+      var n = QUOTES.filter(function (x) { return x.status === t.id && matches(x); }).length;
+      return '<button type="button" role="tab" class="qtab' + (t.id === state.tab ? " active" : "") + '" aria-selected="' + (t.id === state.tab) + '" data-tab="' + esc(t.id) + '">' +
+        esc(t.id) + " (" + n + ")</button>";
+    }).join("");
+  }
+  function renderList() {
+    var all = QUOTES.filter(inTab);
+    var shown = all.filter(matches);
+    $("count").textContent = "Showing " + shown.length + " of " + all.length + " quotes";
+    $("list").innerHTML = shown.length ? shown.map(function (x) {
+      var d = parseIssued(x.issued);
+      return '<li><button type="button" class="qitem' + (x.no === state.selected ? " on" : "") + '" data-no="' + esc(x.no) + '"' + (x.no === state.selected ? ' aria-current="true"' : "") + ">" +
+        '<span class="qitem-top"><span class="qitem-no">' + esc(x.no) + (x.focus ? '<span class="from-tag">From dashboard</span>' : "") + "</span>" +
+        '<span class="chip st-' + tabOf(x.status).cls + '">' + esc(x.status) + "</span></span>" +
+        '<span class="qitem-co" style="display:block">' + esc(x.company) + "</span>" +
+        '<span class="qitem-svc" style="display:block">' + esc(x.service) + "</span>" +
+        '<span class="qitem-route" style="display:block">' + esc(x.pol) + " → " + esc(x.pod) + "</span>" +
+        '<span class="qitem-date" style="display:block">' + (d ? isoDay(d) : "") + "</span></button></li>";
+    }).join("") : '<li class="qempty">No quotes here.</li>';
+  }
+
+  // ---------- Detail ----------
+  var CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function approval(x, issued) {
+    if (x.status === "Pending approval") {
+      return '<div class="approval pending">' + CHECK + '<div><h3>Waiting for approval</h3><p>Submitted for approval' +
+        (issued ? " on " + fmtDateTime(issued) : "") + ". The Head of Commercial needs to approve it before it can be sent.</p></div></div>";
+    }
+    var approvedAt = issued ? new Date(issued.getTime() - 45 * 60000) : null;
+    var by = "<b>Kimeen Ugwu (Head of Commercial)</b>" + (approvedAt ? " on " + fmtDateTime(approvedAt) : "");
+    if (x.status === "Declined") return '<div class="approval declined">' + CHECK + "<div><h3>Declined by the customer</h3><p>Approved by " + by + ", then declined by the customer.</p></div></div>";
+    if (x.status === "Accepted") return '<div class="approval">' + CHECK + "<div><h3>Accepted by the customer</h3><p>Approved by " + by + ". The customer has accepted this quote.</p></div></div>";
+    if (x.status === "Awaiting customer") return '<div class="approval">' + CHECK + "<div><h3>Sent to the customer</h3><p>Approved by " + by + ". Waiting for the customer to reply.</p></div></div>";
+    return '<div class="approval">' + CHECK + "<div><h3>Approved and ready to send</h3><p>Approved by " + by + ". Sales can now send or download this quote.</p></div></div>";
+  }
+  function field(label, value, strong) {
+    return "<div><dt>" + esc(label) + '</dt><dd class="' + (strong ? "strong" : "") + '">' + (value === "" || value == null ? "—" : esc(value)) + "</dd></div>";
+  }
+  function port(name, code) {
+    var parts = name.split(", ");
+    return code ? parts[0] + " (" + code + ")" + (parts[1] ? " " + parts[1] : "") : name;
+  }
+  function renderDetail() {
+    var x = QUOTES.filter(function (y) { return y.no === state.selected; })[0];
+    if (!x) { $("detail").innerHTML = '<div class="qempty">Select a quote to view it.</div>'; return; }
+    var d = details(x);
+    var issued = parseIssued(x.issued);
+    var validity = "";
+    if (issued) {
+      var left = Math.ceil((issued.getTime() + VALID_DAYS * 86400000 - AS_OF.getTime()) / 86400000);
+      validity = left > 0 ? '<span class="valid">Valid for ' + left + (left === 1 ? " day" : " days") + "</span>" : '<span class="expired">Expired</span>';
+    }
+    var rfqHref = x.focus && /^rfq\.html\?/.test(q.get("rfqlink") || "") ? q.get("rfqlink") : null; // only ever link to the local RFQ table
+    var rfqLink = x.rfq ? (rfqHref ? '<a href="' + esc(rfqHref) + '" title="Open in the RFQ table">' + esc(x.rfq) + "</a>" : "<span>" + esc(x.rfq) + "</span>") : "";
+
+    $("detail").innerHTML =
+      '<div class="detail-head"><div class="detail-title"><b>' + esc(x.no) + "</b><span>" + esc(x.company) + " · " + esc(x.pol) + " → " + esc(x.pod) + "</span></div>" +
+      '<div class="detail-actions"><select class="select" id="statusSel" aria-label="Quote status">' +
+      TABS.map(function (t) { return "<option" + (t.id === x.status ? " selected" : "") + ">" + esc(t.id) + "</option>"; }).join("") + "</select>" +
+      '<button type="button" class="btn" id="pdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>PDF</button></div></div>' +
+      '<div class="detail-body"><div class="doc-wrap">' + approval(x, issued) +
+      '<article class="doc"><div class="doc-top"><span class="brand"><span class="brand-mark">OP</span><span class="brand-name">OnePort<small>365</small></span></span>' +
+      '<div class="doc-no"><b>' + esc(x.no) + "</b>" + (issued ? "<span>Date: " + fmtDate(issued) + "</span>" : "") + "<span>" + validity + "</span></div></div>" +
+      '<p class="address">Meydan Grandstand, 6th floor, Meydan Road, Nad Al Sheba, Dubai, U.A.E.</p>' +
+      '<div class="section-h"><h4>Booking Details</h4>' + rfqLink + (x.deal ? "<span>Shipment " + esc(x.deal) + "</span>" : "") + "</div>" +
+      '<dl class="grid">' +
+      field("Service type", x.service.replace(" · ", " ")) + field("Company name", x.company, true) +
+      field(x.owner ? "Deal owner" : "Customer name", x.owner || x.contact) + field("Total value of goods", "USD " + Number(x.value).toLocaleString("en-US")) +
+      field("Port of loading", port(x.pol, x.polcode)) + field("Port of destination", port(x.pod, x.podcode)) +
+      field("Incoterms", d.incoterms) + field("BL number", "") +
+      field("Branch", d.branch) + field("Source", "Backoffice") + "</dl>" +
+      '<div class="box"><span class="eyebrow">Container details</span><dl class="grid">' +
+      field("Class", d.cls) + field("Commodity description", d.commodity) + field("Container size", d.size) + field("Container type", d.type) +
+      field("Count", d.count) + field("Weight (kg)", d.weight.toLocaleString("en-US")) + "</dl></div>" +
+      '<div class="section-h"><h4>Charges</h4></div>' +
+      '<table class="charges"><thead><tr><th>Description</th><th class="num">Amount</th></tr></thead><tbody>' +
+      d.lines.map(function (l) { return "<tr><td>" + esc(l[0]) + '</td><td class="num">' + usd(l[1]) + "</td></tr>"; }).join("") +
+      '</tbody><tfoot><tr><td>Total</td><td class="num">' + usd(d.total) + "</td></tr></tfoot></table>" +
+      "</article></div></div>";
+
+    $("statusSel").addEventListener("change", function () { x.status = this.value; state.tab = x.status; render(); });
+    $("pdf").addEventListener("click", function () { window.print(); });
+  }
+
+  function render() { renderTabs(); renderList(); renderDetail(); }
+
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]"); if (!b) return;
+    state.tab = b.getAttribute("data-tab");
+    var first = QUOTES.filter(function (x) { return inTab(x) && matches(x); })[0];
+    if (first && !QUOTES.some(function (x) { return x.no === state.selected && inTab(x); })) state.selected = first.no;
+    render();
+  });
+  $("list").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-no]"); if (!b) return;
+    state.selected = b.getAttribute("data-no");
+    render();
+    if (window.matchMedia("(max-width: 900px)").matches) $("detail").scrollIntoView({ block: "start" });
+  });
+  $("search").addEventListener("input", function () { state.q = this.value.trim(); renderTabs(); renderList(); });
+
+  if (!state.selected) state.selected = (QUOTES.filter(inTab)[0] || QUOTES[0]).no;
+  render();
+
+  var banner = $("banner");
+  if (focusNo) {
+    banner.innerHTML = "<span>Showing quote <b>" + esc(focusNo) + "</b>" + (deal ? " for shipment <b>" + esc(deal) + "</b>" : "") +
+      (q.get("customer") ? " · " + esc(q.get("customer")) : "") + "</span>";
+    banner.hidden = false;
+  } else if (deal) {
+    banner.className = "focus-banner warn";
+    banner.innerHTML = "<span>No quote yet for shipment <b>" + esc(deal) + "</b>" + (q.get("customer") ? " (" + esc(q.get("customer")) + ")" : "") +
+      ". It hasn't reached the Quote issued step.</span>";
+    banner.hidden = false;
+  }
+})();
+  </script>
+</body>
+</html>

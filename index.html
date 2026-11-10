@@ -396,6 +396,9 @@ button { font: inherit; color: inherit; }
       <a class="rail-btn" href="rfq.html" aria-label="RFQ" title="RFQ">
         <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
       </a>
+      <a class="rail-btn" href="quotes.html" aria-label="Quotes" title="Quotes">
+        <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </a>
       <a class="rail-btn" href="#" aria-label="Analytics" title="Analytics">
         <svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M9 16v-5M14 16V8M19 16v-3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
       </a>
@@ -578,6 +581,8 @@ button { font: inherit; color: inherit; }
   var RFQ_TABLE_URL = "rfq.html";
   // Where the Prospect heading in the shipment drawer links to: the CRM pipeline board
   var CRM_BOARD_URL = "crm.html";
+  // Where the Quote issued step links to: the quotes page, opened on that quote
+  var QUOTES_URL = "quotes.html";
   var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var STEP_TEAM = {
     "Rate request": "pricing", "Margin gate": "pricing",
@@ -895,6 +900,35 @@ button { font: inherit; color: inherit; }
     return RFQ_TABLE_URL + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
   }
 
+  // ---------- Link to the quote ----------
+  var PORT_COUNTRIES = { "Shanghai": "China", "Apapa": "Nigeria", "Ningbo": "China", "Tin Can": "Nigeria", "Antwerp": "Belgium",
+    "Lagos": "Nigeria", "Rotterdam": "Netherlands", "Dubai (Jebel Ali)": "U.A.E.", "Onne": "Nigeria", "Mumbai (Nhava Sheva)": "India",
+    "Lagos (LOS)": "Nigeria", "London (LHR)": "United Kingdom", "Guangzhou": "China", "Lekki Deep Sea": "Nigeria" };
+  // A shipment has a quote once it reaches Quote issued; it shares its number with the RFQ
+  function quoteNumber(s) {
+    var reached = s.lost ? s.lostStep : s.step;
+    if (reached < stepIndex("Quote issued")) return null;
+    return "Q-26-11-" + String(8 + Number(s.id.slice(-3))).padStart(3, "0");
+  }
+  function quoteStatus(s) {
+    if (s.lost) return "Declined";
+    return s.phase > 0 || STEPS[s.step].name === "Customer acceptance" ? "Accepted" : "Awaiting customer";
+  }
+  function quoteUrl(s, hist) {
+    var q = { deal: s.id, customer: s.customer };
+    var no = quoteNumber(s);
+    if (no) {
+      var ports = s.route.split(" → ");
+      var at = hist[stepIndex("Quote issued")].at;
+      q.quote = no; q.rfq = rfqNumber(s); q.rfqlink = rfqUrl(s); q.mode = s.mode; q.owner = s.owner; q.value = s.value; q.status = quoteStatus(s);
+      q.pol = ports[0] + ", " + (PORT_COUNTRIES[ports[0]] || ""); q.polcode = PORT_CODES[ports[0]] || "";
+      q.pod = ports[1] + ", " + (PORT_COUNTRIES[ports[1]] || ""); q.podcode = PORT_CODES[ports[1]] || "";
+      q.issued = at.getFullYear() + "-" + String(at.getMonth() + 1).padStart(2, "0") + "-" + String(at.getDate()).padStart(2, "0") +
+        "T" + String(at.getHours()).padStart(2, "0") + ":" + String(at.getMinutes()).padStart(2, "0");
+    }
+    return QUOTES_URL + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
+  }
+
   function crmUrl(s, hist) {
     var lastStep = Math.min(s.lost ? s.lostStep : s.step, PHASES[0].steps.length - 1);
     var h = hist[lastStep];
@@ -905,6 +939,8 @@ button { font: inherit; color: inherit; }
       note: verb + " by " + h.owner + " · " + fmtDateTime(h.at), created: s.created.replace(/\//g, "-") };
     var rfq = rfqNumber(s);
     if (rfq) { q.rfq = rfq; q.rfqlink = rfqUrl(s); }
+    var quote = quoteNumber(s);
+    if (quote) { q.quote = quote; q.quotelink = quoteUrl(s, hist); }
     return CRM_BOARD_URL + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
   }
 
@@ -946,6 +982,8 @@ button { font: inherit; color: inherit; }
         return '<li class="step ' + cls + '"><i>' + mark + '</i><span class="step-body">' +
           (st.name === "RFQ"
             ? '<a class="step-link" href="' + esc(rfqUrl(s)) + '" title="Open the RFQ table">' + esc(st.name) + ARROW + "</a>"
+            : st.name === "Quote issued"
+            ? '<a class="step-link" href="' + esc(quoteUrl(s, hist)) + '" title="Open the quote">' + esc(st.name) + ARROW + "</a>"
             : "<span>" + esc(st.name) + "</span>") + meta + "</span></li>";
       }).join("");
     }).join("");

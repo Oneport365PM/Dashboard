@@ -7,6 +7,8 @@ tracker with a detail drawer showing who handled each step and when.
 - `index.html` — the dashboard (open it in a browser; no build step)
 - `rfq.html` — the RFQ table; the RFQ step in a shipment's detail drawer
   opens it with that shipment's RFQ highlighted
+- `quotes.html` — the quotes list and quote document; the Quote issued step
+  in a shipment's detail drawer opens it on that shipment's quote
 - `crm.html` — the CRM pipeline board; the Prospect heading in a shipment's
   detail drawer opens it with that deal highlighted in its stage
 - `design/tokens.css` — OnePort 365 colours, type, spacing and shadows
