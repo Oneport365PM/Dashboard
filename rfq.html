@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OnePort365 RFQ Table</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Open+Sans:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="design/tokens.css" />
+  <style>
+/*
+  OnePort365 RFQ table.
+  Same tokens and shell as the operations dashboard (index.html).
+  Opened from a shipment's "RFQ" link with
+  ?deal=&customer=&rfq=&service=&pol=&pod=&status=&quote= — that RFQ is
+  added if needed, and its row is highlighted on the page it falls on.
+*/
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--op-cream); color: var(--op-silver-dark);
+  font-family: var(--op-font-body); font-size: 14px; font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--op-dark-green); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+.shell { display: flex; min-height: 100%; }
+.rail {
+  width: 72px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; background: var(--op-dark-green);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 0;
+}
+.rail-mark {
+  width: 40px; height: 40px; border-radius: 12px; margin-bottom: 14px; background: var(--op-accent-lime); color: var(--op-dark-green);
+  display: flex; align-items: center; justify-content: center; font-family: var(--op-font-display); font-weight: 700; font-size: 14px;
+}
+.rail-btn { width: 44px; height: 44px; border-radius: var(--op-radius-md); display: flex; align-items: center; justify-content: center; color: var(--op-light-green); }
+.rail-btn svg { width: 22px; height: 22px; }
+.rail-btn:hover { background: rgba(255,255,255,.1); color: var(--op-white); }
+.rail-btn.active { background: var(--op-accent-lime); color: var(--op-dark-green); }
+
+.main { flex: 1; min-width: 0; padding: 28px max(32px, env(safe-area-inset-right, 0px)) 40px max(32px, env(safe-area-inset-left, 0px)); }
+.back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; text-decoration: none; color: var(--op-dark-green); font-weight: 700; font-size: 13px; }
+.back svg { width: 14px; height: 14px; }
+.back:hover { text-decoration: underline; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.top h1 { margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 28px; letter-spacing: -.015em; color: var(--op-dark-green); }
+.top p { margin: 6px 0 0; color: var(--op-silver-light); font-size: 15px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; cursor: pointer;
+  border-radius: var(--op-radius-md); font-family: var(--op-font-display); font-weight: 600; font-size: 13px;
+  background: var(--op-white); border: 1.5px solid var(--op-border-input); color: var(--op-dark-green);
+}
+.btn svg { width: 16px; height: 16px; }
+.btn:hover { border-color: var(--op-dark-green); }
+
+.focus-banner {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 12px 14px;
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-left: 4px solid var(--op-accent-lime);
+  border-radius: var(--op-radius-lg); box-shadow: var(--op-elevation-1); line-height: 1.45;
+}
+.focus-banner.warn { border-left-color: var(--op-gold); }
+.focus-banner b { color: var(--op-dark-green); }
+.focus-banner .clear { margin-left: auto; background: none; border: 0; padding: 0; cursor: pointer; font-weight: 700; color: var(--op-dark-green); border-bottom: 1.5px solid var(--op-dark-green); }
+
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.search {
+  flex: 1 1 320px; display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px;
+  background: var(--op-white); border: 1.5px solid var(--op-border-input); border-radius: var(--op-radius-md);
+}
+.search svg { width: 17px; height: 17px; color: var(--op-silver-light); flex-shrink: 0; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: none; }
+.search:focus-within { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); }
+.select {
+  height: 42px; min-width: 170px; padding: 0 12px; cursor: pointer; background: var(--op-white);
+  border: 1.5px solid var(--op-border-input); border-radius: var(--op-radius-md); color: var(--op-silver-dark);
+}
+.select:focus { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); outline: none; }
+
+.table-card { background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-xl); box-shadow: var(--op-elevation-1); overflow: hidden; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; min-width: 980px; border-collapse: collapse; }
+th {
+  text-align: left; padding: 14px 16px; background: rgba(209, 219, 189, .35); border-bottom: 1px solid var(--op-border-card);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--op-silver-dark); white-space: nowrap;
+}
+td { padding: 13px 16px; border-bottom: 1px solid var(--op-border-divider); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--op-cream); }
+.rfq-no { font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); }
+.chev { width: 16px; height: 16px; color: var(--op-silver-light); display: block; }
+.chip { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--op-radius-sm); }
+.chip-new, .chip-quoting { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); }
+.chip-awaiting { background: var(--op-chip-warning-bg); color: var(--op-chip-warning-text); }
+.chip-quoted { background: var(--op-dark-green); color: var(--op-white); }
+.chip-lost { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
+.chip-draft { background: var(--op-chip-neutral-bg); color: var(--op-chip-neutral-text); }
+.chip-ready { background: var(--op-chip-primary-bg); color: var(--op-chip-primary-text); }
+.dash { color: var(--op-silver-light); }
+
+tr.focus td { background: rgba(191, 251, 79, .28); }
+tr.focus td:first-child { box-shadow: inset 4px 0 0 var(--op-dark-green); }
+tbody tr.focus:hover td { background: rgba(191, 251, 79, .38); }
+.deal-tag { margin-left: 8px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: var(--op-radius-sm); background: var(--op-dark-green); color: var(--op-accent-lime); vertical-align: 1px; }
+.empty { padding: 36px 16px; text-align: center; color: var(--op-silver-light); }
+
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-top: 1px solid var(--op-border-divider); color: var(--op-silver-light); }
+.pager label, .pager .pages { display: inline-flex; align-items: center; gap: 8px; }
+.pager select { height: 34px; padding: 0 8px; border: 1.5px solid var(--op-border-input); border-radius: var(--op-radius-md); background: var(--op-white); color: var(--op-dark-green); font-weight: 700; cursor: pointer; }
+.pg { width: 34px; height: 34px; border-radius: var(--op-radius-md); border: 1.5px solid var(--op-border-input); background: var(--op-white); color: var(--op-dark-green); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.pg svg { width: 14px; height: 14px; }
+.pg:disabled { color: var(--op-silver-light); border-color: var(--op-border-card); cursor: not-allowed; }
+
+@media (max-width: 700px) {
+  .shell { flex-direction: column; }
+  .rail { width: 100%; height: auto; flex-direction: row; z-index: 20; padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
+  .rail-mark { margin: 0 8px 0 0; }
+  .main { padding: 20px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px)); }
+  .top h1 { font-size: 22px; }
+  .select { flex: 1 1 140px; min-width: 0; }
+}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="rail" aria-label="Main">
+      <span class="rail-mark" aria-hidden="true">OP</span>
+      <a class="rail-btn" href="index.html" aria-label="Operations dashboard" title="Operations dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      </a>
+      <a class="rail-btn" href="crm.html" aria-label="CRM board" title="CRM board">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="10" y="4" width="5" height="10" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="17" y="4" width="4" height="13" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </a>
+      <a class="rail-btn active" href="rfq.html" aria-current="page" aria-label="RFQ" title="RFQ">
+        <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </a>
+    </nav>
+
+    <main class="main">
+      <a class="back" href="index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to dashboard
+      </a>
+      <header class="top">
+        <div>
+          <h1>RFQ</h1>
+          <p>Requests for quotation</p>
+        </div>
+        <button type="button" class="btn" id="exportCsv">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Export CSV
+        </button>
+      </header>
+
+      <div class="focus-banner" id="banner" role="status" hidden></div>
+
+      <div class="filters">
+        <label class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" id="search" placeholder="Search RFQ number, company or port..." aria-label="Search RFQs" autocomplete="off" />
+        </label>
+        <select class="select" id="source" aria-label="Source">
+          <option value="">All Sources</option>
+          <option>Backoffice</option>
+          <option>Customer Webapp</option>
+        </select>
+        <select class="select" id="status" aria-label="Status">
+          <option value="">All Statuses</option>
+          <option>New</option>
+          <option>Awaiting Quotes</option>
+          <option>Quoting</option>
+          <option>Quoted</option>
+          <option>Lost</option>
+        </select>
+      </div>
+
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>RFQ number</th><th>Customer</th><th>Service type</th><th>POL</th><th>POD</th><th>Status</th><th>Quote status</th><th>Source</th><th><span hidden>Open</span></th></tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <label>Showing
+            <select id="perPage" aria-label="Items per page"><option>10</option><option>25</option><option>50</option></select>
+            items per page
+          </label>
+          <span class="pages">
+            <select id="page" aria-label="Page"></select>
+            <span id="ofPages"></span>
+            <button type="button" class="pg" id="prev" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" class="pg" id="next" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+(function () {
+  "use strict";
+
+  // Sample RFQs (newest first)
+  var RFQS = [
+    ["RFQ-26-11-008", "Bpaas Docs Keys Co Mv90k8bx", "Air Freight", "NAY", "LOS", "Quoting", "Draft", "Backoffice"],
+    ["RFQ-26-11-007", "Ovuvuenem", "Air Freight", "NAY", "LOS", "Quoting", "Draft", "Backoffice"],
+    ["RFQ-26-11-006", "Agventure commodities limited", "Ocean Freight", "CNSHA", "NGAPP", "Awaiting Quotes", "Draft", "Customer Webapp"],
+    ["RFQ-26-11-005", "Fast Track Export", "Air Freight", "NAY", "LOS", "Quoting", "Draft", "Backoffice"],
+    ["RFQ-26-11-004", "Bpaas Docs Test Co Mv8zm7rw", "Ocean Freight", "NGAPP", "BEANR", "Quoted", "Ready", "Backoffice"],
+    ["RFQ-26-11-003", "Brian's Logistics", "Ocean Freight", "DKAAL", "AUABP", "Quoting", "Draft", "Backoffice"],
+    ["RFQ-26-11-002", "Brian's Logistics", "Ocean Freight", "NGAPP", "KEMBA", "Awaiting Quotes", "Draft", "Backoffice"],
+    ["RFQ-26-11-001", "Brian's Logistics", "Ocean Freight", "DKAAL", "AUABP", "Awaiting Quotes", "Draft", "Backoffice"],
+    ["RFQ-26-10-052", "Fast Track Export", "Ocean Freight", "ESBCN", "NGAPP", "Awaiting Quotes", "Draft", "Backoffice"],
+    ["RFQ-26-10-051", "Brian's Logistics", "Ocean Freight", "ESBCN", "NGAPP", "New", "—", "Customer Webapp"],
+    ["RFQ-26-10-050", "Goshen agro", "Ocean Freight", "AEJEA", "NGONN", "Quoted", "Ready", "Backoffice"],
+    ["RFQ-26-10-049", "Ovuvuenem", "Ocean Freight", "ESBCN", "NGAPP", "Quoting", "Draft", "Backoffice"]
+  ].map(function (r) { return { no: r[0], customer: r[1], service: r[2], pol: r[3], pod: r[4], status: r[5], quote: r[6], source: r[7] }; });
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var STATUS_CHIP = { "New": "new", "Quoting": "quoting", "Awaiting Quotes": "awaiting", "Quoted": "quoted", "Lost": "lost" };
+  var QUOTE_CHIP = { "Draft": "draft", "Ready": "ready" };
+
+  // ---------- RFQ passed in from the dashboard ----------
+  var q = new URLSearchParams(location.search);
+  var focusNo = q.get("rfq");
+  var deal = q.get("deal");
+  if (focusNo) {
+    var row = { no: focusNo, customer: q.get("customer") || "", service: q.get("service") || "", pol: q.get("pol") || "",
+      pod: q.get("pod") || "", status: q.get("status") || "New", quote: q.get("quote") || "—", source: "Backoffice", deal: deal };
+    RFQS = RFQS.filter(function (r) { return r.no !== focusNo; });
+    RFQS.push(row);
+    RFQS.sort(function (a, b) { return a.no < b.no ? 1 : a.no > b.no ? -1 : 0; }); // newest first, by RFQ number
+  }
+
+  var state = { q: "", source: "", status: "", perPage: 10, page: 1 };
+  function filtered() {
+    var s = state.q.toLowerCase();
+    return RFQS.filter(function (r) {
+      return (!s || [r.no, r.customer, r.pol, r.pod].join(" ").toLowerCase().indexOf(s) !== -1) &&
+        (!state.source || r.source === state.source) && (!state.status || r.status === state.status);
+    });
+  }
+
+  function render() {
+    var list = filtered();
+    var pages = Math.max(1, Math.ceil(list.length / state.perPage));
+    state.page = Math.min(state.page, pages);
+    var shown = list.slice((state.page - 1) * state.perPage, state.page * state.perPage);
+    $("rows").innerHTML = shown.length ? shown.map(function (r) {
+      var focus = r.no === focusNo;
+      return "<tr" + (focus ? ' class="focus" id="focusRow" tabindex="-1" aria-current="true"' : "") + ">" +
+        '<td><span class="rfq-no">' + esc(r.no) + "</span>" + (focus && r.deal ? '<span class="deal-tag">' + esc(r.deal) + "</span>" : "") + "</td>" +
+        "<td>" + esc(r.customer) + "</td><td>" + esc(r.service) + "</td><td>" + esc(r.pol) + "</td><td>" + esc(r.pod) + "</td>" +
+        '<td><span class="chip chip-' + (STATUS_CHIP[r.status] || "draft") + '">' + esc(r.status) + "</span></td>" +
+        "<td>" + (QUOTE_CHIP[r.quote] ? '<span class="chip chip-' + QUOTE_CHIP[r.quote] + '">' + esc(r.quote) + "</span>" : '<span class="dash">—</span>') + "</td>" +
+        "<td>" + esc(r.source) + "</td>" +
+        '<td><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>';
+    }).join("") : '<tr><td colspan="9" class="empty">No RFQs match your search.</td></tr>';
+    $("page").innerHTML = Array.from({ length: pages }, function (_, i) {
+      return "<option" + (i + 1 === state.page ? " selected" : "") + ">" + (i + 1) + "</option>";
+    }).join("");
+    $("ofPages").textContent = "of " + pages + (pages === 1 ? " page" : " pages");
+    $("prev").disabled = state.page === 1;
+    $("next").disabled = state.page === pages;
+  }
+
+  $("search").addEventListener("input", function () { state.q = this.value.trim(); state.page = 1; render(); });
+  $("source").addEventListener("change", function () { state.source = this.value; state.page = 1; render(); });
+  $("status").addEventListener("change", function () { state.status = this.value; state.page = 1; render(); });
+  $("perPage").addEventListener("change", function () { state.perPage = +this.value; state.page = 1; render(); });
+  $("page").addEventListener("change", function () { state.page = +this.value; render(); });
+  $("prev").addEventListener("click", function () { state.page--; render(); });
+  $("next").addEventListener("click", function () { state.page++; render(); });
+  $("exportCsv").addEventListener("click", function () {
+    var cols = ["no", "customer", "service", "pol", "pod", "status", "quote", "source"];
+    var csv = ["RFQ number,Customer,Service type,POL,POD,Status,Quote status,Source"].concat(filtered().map(function (r) {
+      return cols.map(function (c) { return '"' + String(r[c]).replace(/"/g, '""') + '"'; }).join(",");
+    })).join("\n");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "rfqs.csv"; a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  // Open on the page holding the highlighted RFQ
+  if (focusNo) {
+    var idx = RFQS.map(function (r) { return r.no; }).indexOf(focusNo);
+    state.page = Math.floor(idx / state.perPage) + 1;
+  }
+  render();
+
+  var banner = $("banner");
+  if (focusNo) {
+    banner.innerHTML = "<span>Showing <b>" + esc(focusNo) + "</b>" + (deal ? " for shipment <b>" + esc(deal) + "</b>" : "") +
+      (q.get("customer") ? " · " + esc(q.get("customer")) : "") + '</span><button type="button" class="clear" id="clear">Show all RFQs</button>';
+    banner.hidden = false;
+  } else if (deal) {
+    banner.className = "focus-banner warn";
+    banner.innerHTML = "<span>No RFQ yet for shipment <b>" + esc(deal) + "</b>" + (q.get("customer") ? " (" + esc(q.get("customer")) + ")" : "") +
+      ". It hasn't reached the RFQ step.</span>";
+    banner.hidden = false;
+  }
+  if ($("clear")) $("clear").addEventListener("click", function () { location.href = "rfq.html"; });
+  var el = $("focusRow");
+  if (el) { el.scrollIntoView({ block: "center" }); el.focus({ preventScroll: true }); }
+})();
+  </script>
+</body>
+</html>

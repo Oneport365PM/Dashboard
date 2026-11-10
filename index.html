@@ -393,6 +393,9 @@ button { font: inherit; color: inherit; }
       <a class="rail-btn" href="crm.html" aria-label="CRM board" title="CRM board">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="10" y="4" width="5" height="10" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/><rect x="17" y="4" width="4" height="13" rx="1.5" stroke="currentColor" stroke-width="2" fill="none"/></svg>
       </a>
+      <a class="rail-btn" href="rfq.html" aria-label="RFQ" title="RFQ">
+        <svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </a>
       <a class="rail-btn" href="#" aria-label="Analytics" title="Analytics">
         <svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16M9 16v-5M14 16V8M19 16v-3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
       </a>
@@ -572,10 +575,9 @@ button { font: inherit; color: inherit; }
     ops: ["Emeka Obi", "Halima Yusuf", "Femi Lawal"]
   };
   // Where the RFQ step in the shipment drawer links to: the backoffice RFQ table
-  var RFQ_TABLE_URL = "/rfq";
+  var RFQ_TABLE_URL = "rfq.html";
   // Where the Prospect heading in the shipment drawer links to: the CRM pipeline board
   var CRM_BOARD_URL = "crm.html";
-  var STEP_LINKS = { "RFQ": RFQ_TABLE_URL };
   var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var STEP_TEAM = {
     "Rate request": "pricing", "Margin gate": "pricing",
@@ -862,6 +864,37 @@ button { font: inherit; color: inherit; }
     return { "Deal created": "prospect", "Customer contacted": "contacted", "RFQ": "qualified",
       "Rate request": "qualified" }[name] || "quote";
   }
+  // ---------- Link to the RFQ table ----------
+  // Port codes as the RFQ table shows them (UN/LOCODE for ocean, IATA for air)
+  var PORT_CODES = { "Shanghai": "CNSHA", "Apapa": "NGAPP", "Ningbo": "CNNGB", "Tin Can": "NGTIN", "Antwerp": "BEANR",
+    "Lagos": "NGLOS", "Rotterdam": "NLRTM", "Dubai (Jebel Ali)": "AEJEA", "Onne": "NGONN", "Mumbai (Nhava Sheva)": "INNSA",
+    "Lagos (LOS)": "LOS", "London (LHR)": "LHR", "Guangzhou": "CNCAN", "Lekki Deep Sea": "NGLKK" };
+  // A shipment has an RFQ once it reaches the RFQ step (lost shipments: if lost at or after it)
+  function rfqNumber(s) {
+    var reached = s.lost ? s.lostStep : s.step;
+    if (reached < stepIndex("RFQ")) return null;
+    return "RFQ-26-11-" + String(8 + Number(s.id.slice(-3))).padStart(3, "0");
+  }
+  function rfqStatus(s) {
+    if (s.lost) return ["Lost", "—"];
+    var name = STEPS[s.step].name;
+    if (name === "RFQ") return ["New", "—"];
+    if (name === "Rate request") return ["Awaiting Quotes", "Draft"];
+    return ["Quoted", "Ready"];
+  }
+  function rfqUrl(s) {
+    var ports = s.route.split(" → ");
+    var st = rfqStatus(s);
+    var q = { deal: s.id, customer: s.customer };
+    var no = rfqNumber(s);
+    if (no) {
+      q.rfq = no; q.service = s.mode.replace("freight", "Freight");
+      q.pol = PORT_CODES[ports[0]] || ports[0]; q.pod = PORT_CODES[ports[1]] || ports[1];
+      q.status = st[0]; q.quote = st[1];
+    }
+    return RFQ_TABLE_URL + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
+  }
+
   function crmUrl(s, hist) {
     var lastStep = Math.min(s.lost ? s.lostStep : s.step, PHASES[0].steps.length - 1);
     var h = hist[lastStep];
@@ -909,8 +942,8 @@ button { font: inherit; color: inherit; }
             '<time datetime="' + hh.at.toISOString() + '">' + when + fmtDateTime(hh.at) + "</time></span>";
         }
         return '<li class="step ' + cls + '"><i>' + mark + '</i><span class="step-body">' +
-          (STEP_LINKS[st.name]
-            ? '<a class="step-link" href="' + esc(STEP_LINKS[st.name]) + '" title="Open the RFQ table">' + esc(st.name) + ARROW + "</a>"
+          (st.name === "RFQ"
+            ? '<a class="step-link" href="' + esc(rfqUrl(s)) + '" title="Open the RFQ table">' + esc(st.name) + ARROW + "</a>"
             : "<span>" + esc(st.name) + "</span>") + meta + "</span></li>";
       }).join("");
     }).join("");
