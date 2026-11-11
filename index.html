@@ -70,105 +70,9 @@ button { font: inherit; color: inherit; }
   padding-right: max(32px, env(safe-area-inset-right, 0px));
 }
 
-/* ---------- Greeting ---------- */
-.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
-.top h1 {
-  margin: 0; font-family: var(--op-font-display); font-weight: 600; font-size: 28px;
-  letter-spacing: -.015em; color: var(--op-dark-green); text-wrap: balance;
-}
-.today { margin: 6px 0 0; color: var(--op-silver-light); font-size: 15px; }
-.today span { color: var(--op-silver-dark); font-weight: 500; }
-
-.notif-wrap { position: relative; }
-.bell {
-  position: relative; width: 46px; height: 46px; border-radius: var(--op-radius-lg); cursor: pointer;
-  background: var(--op-white); border: 1px solid var(--op-border-card); color: var(--op-dark-green);
-  display: flex; align-items: center; justify-content: center; box-shadow: var(--op-elevation-1);
-}
-.bell svg { width: 22px; height: 22px; }
-.bell:hover, .bell[aria-expanded="true"] { border-color: var(--op-dark-green); }
-.bell-badge {
-  position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px;
-  border-radius: var(--op-radius-full); background: var(--op-dark-green); color: var(--op-accent-lime);
-  font-family: var(--op-font-display); font-weight: 600; font-size: 11px;
-  display: flex; align-items: center; justify-content: center; border: 2px solid var(--op-cream);
-}
-.notif-pop {
-  position: absolute; right: 0; top: 56px; z-index: 30; width: min(360px, calc(100vw - 32px));
-  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-xl);
-  box-shadow: var(--op-elevation-3); padding: 14px;
-}
-.notif-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.notif-head b { font-family: var(--op-font-display); font-weight: 600; color: var(--op-dark-green); font-size: 15px; }
-.notif-head .link { font-size: 12px; }
-.notif-list { list-style: none; margin: 0; padding: 0; }
-.notif-list button {
-  width: 100%; display: flex; gap: 10px; align-items: flex-start; text-align: left; cursor: pointer;
-  background: none; border: 0; border-radius: var(--op-radius-md); padding: 10px 8px; line-height: 1.45;
-}
-.notif-list button:hover { background: var(--op-chip-neutral-bg); }
-.notif-list .dot { margin-top: 6px; }
-.notif-list small { display: block; color: var(--op-silver-light); font-size: 12px; }
-.notif-list .read { opacity: .65; }
-
-/* ---------- Summary ---------- */
-.summary {
-  display: grid; grid-template-columns: 1fr 1.9fr 1.1fr 1.1fr 1.15fr; gap: 16px; margin-bottom: 24px;
-}
-.col {
-  padding: 20px 18px; min-width: 0;
-  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-xl);
-  box-shadow: var(--op-elevation-1);
-}
-.col-head {
-  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
-  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
-}
-.col-name { font-family: var(--op-font-display); font-weight: 600; font-size: 15px; color: var(--op-dark-green); }
-.col-bar { display: block; height: 4px; border-radius: 2px; width: 28px; background: var(--bar); }
-.big {
-  display: block; margin: 6px 0 14px; font-family: var(--op-font-display); font-weight: 600;
-  font-size: 40px; line-height: 1; letter-spacing: -.02em; color: var(--op-dark-green);
-}
-.col-active { background: var(--op-dark-green); border-color: var(--op-dark-green); box-shadow: var(--op-elevation-2); }
-.col-active .col-name, .col-active .big { color: var(--op-cream); }
-
-.subs { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.subs-2 { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--rows, 3), auto); grid-auto-flow: column; column-gap: 18px; }
-.sub {
-  width: 100%; display: flex; align-items: flex-start; gap: 8px; cursor: pointer; text-align: left;
-  background: none; border: 0; border-radius: var(--op-radius-sm); padding: 5px 6px; margin: 0 -6px;
-  font-size: 13px; color: var(--op-silver-dark);
-}
-.sub svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: var(--op-silver-light); }
-.sub .n { margin-left: auto; font-weight: 700; color: var(--op-dark-green); }
-.sub .lbl { min-width: 0; line-height: 1.35; }
-.sub:hover { background: var(--op-chip-neutral-bg); }
-.sub.on { background: var(--op-accent-lime); color: var(--op-dark-green); }
-.sub.on svg { color: var(--op-dark-green); }
-
-.alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.alert {
-  width: 100%; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left;
-  background: none; border: 0; border-radius: var(--op-radius-sm); padding: 5px 6px; margin: 0 -6px;
-  color: var(--op-cream); font-size: 13px;
-}
-.alert b { font-family: var(--op-font-display); font-weight: 600; }
-.alert:hover { background: rgba(255,255,255,.1); }
-.alert.on { background: var(--op-accent-lime); color: var(--op-dark-green); }
-.lost-link {
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; cursor: pointer;
-  background: none; border: 0; padding: 5px 6px; margin-left: -6px; border-radius: var(--op-radius-sm);
-  color: var(--op-light-green); font-size: 13px;
-}
-.lost-link svg { width: 15px; height: 15px; }
-.lost-link:hover { background: rgba(255,255,255,.1); }
-.lost-link.on { background: var(--op-accent-lime); color: var(--op-dark-green); }
-
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .dot-error { background: var(--op-error); }
 .dot-warning { background: var(--op-gold); }
-.col-active .dot { box-shadow: 0 0 0 2px rgba(253,251,241,.15); }
 
 /* ---------- Tracker ---------- */
 .tracker {
@@ -431,15 +335,6 @@ button { font: inherit; color: inherit; }
 .avatar-4 { background: var(--op-avatar-4-bg); color: var(--op-avatar-4-text); }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1240px) {
-  .summary { grid-template-columns: repeat(3, 1fr); }
-  .col-prospect { grid-column: span 2; }
-}
-@media (max-width: 820px) {
-  .summary { grid-template-columns: 1fr 1fr; }
-  .col-active { grid-column: 1 / -1; }
-  .col-prospect { grid-column: 1 / -1; }
-}
 @media (max-width: 700px) {
   .shell { flex-direction: column; }
   .rail {
@@ -448,13 +343,8 @@ button { font: inherit; color: inherit; }
   }
   .rail-mark { margin: 0 8px 0 0; }
   .main { padding-block: 20px 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  .top h1 { font-size: 22px; }
   .tracker { padding: 16px 14px 12px; }
   .search { width: 100%; }
-}
-@media (max-width: 480px) {
-  .summary { grid-template-columns: 1fr; }
-  .subs-2 { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
 }
 
 </style>
@@ -486,27 +376,6 @@ button { font: inherit; color: inherit; }
     </nav>
 
     <main class="main">
-      <!-- Greeting -->
-      <header class="top">
-        <div>
-          <h1 id="greeting">Good morning, John</h1>
-          <p class="today">Today · <span id="todayDate"></span></p>
-        </div>
-        <div class="notif-wrap">
-          <button type="button" class="bell" id="bellBtn" aria-haspopup="true" aria-expanded="false" aria-label="Notifications, 3 unread">
-            <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 13 6 8zM10 19a2 2 0 004 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="bell-badge" id="bellBadge">3</span>
-          </button>
-          <div class="notif-pop" id="notifPop" role="dialog" aria-label="Notifications" hidden>
-            <div class="notif-head"><b>Notifications</b><button type="button" class="link" id="markRead">Mark all as read</button></div>
-            <ul class="notif-list" id="notifList"></ul>
-          </div>
-        </div>
-      </header>
-
-      <!-- Summary: active work and the four phases -->
-      <section class="summary" aria-label="Shipment summary" id="summary"></section>
-
       <!-- Shipment tracker -->
       <section class="tracker" aria-labelledby="trackerTitle">
         <div class="tracker-head">
@@ -759,12 +628,6 @@ button { font: inherit; color: inherit; }
   }
   function money(n) { return "$" + Number(n).toLocaleString("en-US"); }
 
-  // ---------- Greeting ----------
-  var now = new Date();
-  var h = now.getHours();
-  $("greeting").textContent = (h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening") + ", John";
-  $("todayDate").textContent = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
   // ---------- State ----------
   var state = { filter: { kind: "all" }, page: 1, perPage: 10, q: "" };
   function sameFilter(a, b) { return a.kind === b.kind && a.value === b.value; }
@@ -792,46 +655,6 @@ button { font: inherit; color: inherit; }
     if (f.kind === "alert") { var a = alertById(f.value); return a.label.charAt(0).toUpperCase() + a.label.slice(1); }
     return "";
   }
-
-  // ---------- Summary ----------
-  function renderSummary() {
-    var live = SHIPMENTS.filter(function (s) { return !s.lost; });
-    var f = state.filter;
-    var on = function (kind, value) { return f.kind === kind && f.value === value ? " on" : ""; };
-
-    var html = '<div class="col col-active">' +
-      '<button type="button" class="col-head" data-filter="active" aria-label="Show active shipments"><span class="col-name">Active</span></button>' +
-      '<span class="big">' + live.length + "</span>" +
-      '<ul class="alerts">' + ALERTS.map(function (a) {
-        var n = SHIPMENTS.filter(function (s) { return s.alert === a.id; }).length;
-        return '<li><button type="button" class="alert' + on("alert", a.id) + '" data-filter="alert" data-value="' + a.id + '">' +
-          '<span class="dot dot-' + a.sev + '"></span><span><b>' + n + "</b> " + esc(n === 1 && a.one ? a.one : a.label) + "</span></button></li>";
-      }).join("") + "</ul>" +
-      '<button type="button" class="lost-link' + on("lost", undefined) + '" data-filter="lost">' + icon("box") +
-      SHIPMENTS.filter(function (s) { return s.lost; }).length + " lost prospects</button></div>";
-
-    html += PHASES.map(function (p, pi) {
-      var n = live.filter(function (s) { return s.phase === pi; }).length;
-      var steps = STEPS.map(function (s, si) { return { s: s, si: si }; }).filter(function (x) { return x.s.phase === pi; });
-      return '<div class="col col-' + p.id + '" style="--bar:' + p.bar + '">' +
-        '<button type="button" class="col-head" data-filter="phase" data-value="' + pi + '" aria-label="Show ' + esc(p.name) + ' shipments">' +
-        '<span class="col-name">' + esc(p.name) + '</span><span class="col-bar"></span></button>' +
-        '<span class="big">' + n + "</span>" +
-        '<ul class="subs' + (steps.length > 4 ? ' subs-2" style="--rows:' + Math.ceil(steps.length / 2) : "") + '">' + steps.map(function (x) {
-          var c = live.filter(function (s) { return s.step === x.si; }).length;
-          return '<li><button type="button" class="sub' + on("step", x.si) + '" data-filter="step" data-value="' + x.si + '">' +
-            icon(x.s.icon) + '<span class="lbl">' + esc(x.s.name) + '</span><span class="n">' + c + "</span></button></li>";
-        }).join("") + "</ul></div>";
-    }).join("");
-    $("summary").innerHTML = html;
-  }
-  $("summary").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-filter]");
-    if (!b) return;
-    var v = b.getAttribute("data-value");
-    var kind = b.getAttribute("data-filter");
-    setFilter({ kind: kind, value: kind === "alert" ? v : v == null ? undefined : Number(v) });
-  });
 
   // ---------- Tracker ----------
   $("phaseHeaders").innerHTML = PHASES.map(function (p) { return "<span>" + esc(p.name) + "</span>"; }).join("");
@@ -1173,48 +996,12 @@ button { font: inherit; color: inherit; }
   }
   $("drawer").addEventListener("click", function (e) { if (e.target.closest("[data-close]")) closeDrawer(); });
 
-  // ---------- Notifications ----------
-  var NOTES = ["overdue", "hold", "quotes"].map(function (id) {
-    var s = SHIPMENTS.filter(function (x) { return x.alert === id; })[0];
-    var a = alertById(id);
-    var text = { overdue: "Invoice overdue on " + s.id, hold: "Carrier hold expires today on " + s.id, quotes: "Quote awaiting reply on " + s.id }[id];
-    return { ship: s.id, sev: a.sev, text: text, sub: s.customer + " · " + a.detail, read: false };
-  });
-  function renderNotes() {
-    var unread = NOTES.filter(function (n) { return !n.read; }).length;
-    $("bellBadge").hidden = !unread;
-    $("bellBadge").textContent = unread;
-    $("bellBtn").setAttribute("aria-label", "Notifications, " + unread + " unread");
-    $("notifList").innerHTML = NOTES.map(function (n, i) {
-      return '<li><button type="button" class="' + (n.read ? "read" : "") + '" data-note="' + i + '"><span class="dot dot-' + n.sev + '"></span>' +
-        "<span><b>" + esc(n.text) + "</b><small>" + esc(n.sub) + "</small></span></button></li>";
-    }).join("");
-  }
-  function togglePop(show) {
-    $("notifPop").hidden = !show;
-    $("bellBtn").setAttribute("aria-expanded", String(show));
-  }
-  $("bellBtn").addEventListener("click", function (e) { e.stopPropagation(); togglePop($("notifPop").hidden); });
-  $("markRead").addEventListener("click", function () { NOTES.forEach(function (n) { n.read = true; }); renderNotes(); });
-  $("notifList").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-note]");
-    if (!b) return;
-    var n = NOTES[Number(b.getAttribute("data-note"))];
-    n.read = true; renderNotes(); togglePop(false);
-    openDrawer(n.ship);
-  });
-  document.addEventListener("click", function (e) {
-    if (!$("notifPop").hidden && !e.target.closest(".notif-wrap")) togglePop(false);
-  });
   document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    if (!$("drawer").hidden) closeDrawer();
-    else if (!$("notifPop").hidden) { togglePop(false); $("bellBtn").focus(); }
+    if (e.key === "Escape" && !$("drawer").hidden) closeDrawer();
   });
 
   SHIPMENTS.forEach(setCreated); // created = when the deal was created in the step history
-  function render() { renderSummary(); renderTracker(); }
-  renderNotes();
+  function render() { renderTracker(); }
   render();
 })();
 
