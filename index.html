@@ -487,7 +487,6 @@ button { font: inherit; color: inherit; }
     shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
     percent: '<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
     check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
-    card: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
     folder: '<path d="M3 6h6l2 2h10v11H3z"/><path d="M12 11v5M9.5 13.5h5"/>',
     calendar: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M9 15l2 2 4-4"/>',
     ship: '<path d="M3 16l2 4h14l2-4zM6 16V9h12v7M12 9V4M9 6h6"/>',
@@ -511,7 +510,7 @@ button { font: inherit; color: inherit; }
       ["Deal created", 6, "briefcase"], ["Customer contacted", 9, "phone"], ["RFQ", 25, "inbox"], ["Rate request", 5, "calc"], ["Quote issued", 5, "doc"],
       ["Qualification & credit", 11, "shield"], ["Margin gate", 7, "percent"], ["Customer acceptance", 5, "check"]] },
     { id: "pre", name: "Pre-Booking", bar: "var(--op-cat-3)", steps: [
-      ["Credit & payment terms", 14, "card"], ["Job opened", 15, "folder"]] },
+      ["Job opened", 29, "folder"]] },
     { id: "booking", name: "Booking", bar: "var(--op-cat-4)", steps: [
       ["Booking", 7, "calendar"], ["Origin & sailing", 11, "ship"], ["Pre-arrival & clearing", 9, "customs"]] },
     { id: "post", name: "Post Booking", bar: "var(--op-cat-5)", steps: [
@@ -559,7 +558,7 @@ button { font: inherit; color: inherit; }
   var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var STEP_TEAM = {
     "Rate request": "pricing", "Margin gate": "pricing",
-    "Qualification & credit": "finance", "Credit & payment terms": "finance",
+    "Qualification & credit": "finance",
     "Cost-to-bill check": "finance", "Invoicing & collection": "finance",
     "Booking": "ops", "Origin & sailing": "ops", "Pre-arrival & clearing": "ops", "Delivery & documents": "ops"
   };
@@ -578,7 +577,7 @@ button { font: inherit; color: inherit; }
     var remaining = STEPS.map(function (s) { return s.count; });
     var lostLeft = LOST_COUNT;
     // A hand-picked first page so the opening view shows each state
-    var first = [["Credit & payment terms"], ["Origin & sailing", "delayed"], ["RFQ"], ["Rate request"],
+    var first = [["Job opened"], ["Origin & sailing", "delayed"], ["RFQ"], ["Rate request"],
       ["Invoicing & collection", "overdue"], ["Quote issued", "quotes"], ["Margin gate"], ["Booking", "hold"], ["LOST"], ["Customer acceptance"]];
     var plan = first.map(function (f) {
       if (f[0] === "LOST") { lostLeft--; return { lost: true }; }
@@ -781,13 +780,13 @@ button { font: inherit; color: inherit; }
   var STEP_ROLE = {
     "Deal created": "Sales", "Customer contacted": "Sales", "RFQ": "Sales", "Rate request": "Commercial", "Quote issued": "Sales",
     "Qualification & credit": "Finance", "Margin gate": "CEO", "Customer acceptance": "Customer",
-    "Credit & payment terms": "Finance", "Job opened": "Sales",
+    "Job opened": "Sales",
     "Booking": "Operations", "Origin & sailing": "Operations", "Pre-arrival & clearing": "Operations",
     "Cost-to-bill check": "Finance", "Invoicing & collection": "Finance", "Delivery & documents": "Operations", "Job close & review": "Sales"
   };
   var TARGET_H = {
     "Deal created": 2, "Customer contacted": 4, "RFQ": 4, "Rate request": 24, "Quote issued": 8, "Qualification & credit": 24,
-    "Margin gate": 4, "Customer acceptance": 72, "Credit & payment terms": 24, "Job opened": 8, "Booking": 48,
+    "Margin gate": 4, "Customer acceptance": 72, "Job opened": 8, "Booking": 48,
     "Origin & sailing": 336, "Pre-arrival & clearing": 120, "Cost-to-bill check": 24, "Invoicing & collection": 168,
     "Delivery & documents": 72, "Job close & review": 48
   };
