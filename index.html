@@ -281,7 +281,7 @@ button { font: inherit; color: inherit; }
 .drawer-host { position: fixed; inset: 0; z-index: 50; display: flex; justify-content: flex-end; }
 .scrim { position: absolute; inset: 0; background: rgba(2,56,25,.45); opacity: 0; transition: opacity .2s; }
 .drawer {
-  position: relative; width: min(440px, 100%); height: 100%; overflow-y: auto;
+  position: relative; width: min(600px, 100%); height: 100%; overflow-y: auto; display: flex; flex-direction: column;
   background: var(--op-white); box-shadow: var(--op-elevation-3);
   transform: translateX(100%); transition: transform .25s cubic-bezier(.2,.8,.2,1);
 }
@@ -300,7 +300,84 @@ button { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center;
 }
 .icon-btn svg { width: 18px; height: 18px; }
-.drawer-body { padding: 18px 22px 28px; }
+.drawer-body { padding: 16px 22px 20px; flex: 1; }
+/* Drawer: summary */
+.dfacts { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px 16px; margin: 0 0 14px; }
+.dfacts dt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--op-silver-light); margin-bottom: 4px; }
+.dfacts dd { margin: 0; color: var(--op-silver-dark); font-size: 14px; }
+.dfacts .money { font-family: var(--op-font-display); font-weight: 600; color: var(--op-chip-warning-text); }
+.dchips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.dchip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: var(--op-radius-sm); font-size: 12px; font-weight: 700; }
+.dchip svg { width: 10px; height: 10px; }
+.dchip-phase { background: var(--op-dark-green); color: var(--op-white); }
+.dchip-lost { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
+.dchip-count { background: var(--op-chip-success-bg); color: var(--op-chip-success-text); border: 1px solid rgba(15,122,69,.35); font-weight: 600; }
+.key {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 -22px 4px; padding: 9px 22px; list-style: none;
+  background: rgba(209, 219, 189, .35); border-block: 1px solid var(--op-border-divider); font-size: 11px; color: var(--op-silver-dark);
+}
+.key li { display: inline-flex; align-items: center; gap: 6px; }
+.key i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; }
+.key .k-done { background: var(--op-dark-green); border-color: var(--op-dark-green); }
+.key .k-progress { background: var(--op-accent-lime); border-color: var(--op-dark-green); }
+.key .k-overdue { border-color: var(--op-error); }
+.key .k-waiting { border-color: var(--op-gold); }
+.key .k-todo { border-color: var(--op-border-input); }
+/* Drawer: phases and step rows */
+.phase { padding: 14px 0 6px; }
+.phase + .phase { border-top: 1px solid var(--op-border-divider); }
+.phase-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.phase-head h4 { margin: 0; flex-shrink: 0; min-width: 96px; font-family: var(--op-font-display); font-weight: 600; font-size: 14px; color: var(--op-dark-green); }
+.pbar { flex: 1; height: 4px; border-radius: 2px; background: var(--op-chip-neutral-bg); overflow: hidden; }
+.pbar span { display: block; height: 100%; background: var(--op-dark-green); border-radius: 2px; }
+.pcount { flex-shrink: 0; font-size: 12px; color: var(--op-silver-dark); }
+.srows { list-style: none; margin: 0; padding: 0; }
+.srow {
+  display: grid; grid-template-columns: 26px minmax(0, 1.35fr) minmax(0, 1fr) 104px 108px;
+  grid-template-areas: "m n o t s"; gap: 4px 10px; align-items: center;
+  padding: 9px 10px; margin: 0 -10px; border-radius: var(--op-radius-md);
+}
+.srow.current, .srow.overdue, .srow.waiting { background: rgba(209, 219, 189, .4); }
+.smark {
+  grid-area: m; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--op-border-input); background: var(--op-white);
+  display: flex; align-items: center; justify-content: center; color: var(--op-white);
+}
+.smark svg { width: 11px; height: 11px; }
+.srow.done .smark { background: var(--op-dark-green); border-color: var(--op-dark-green); }
+.srow.current .smark { background: var(--op-accent-lime); border: 2px solid var(--op-dark-green); }
+.srow.overdue .smark { border: 2px solid var(--op-error); }
+.srow.waiting .smark { border: 2px solid var(--op-gold); }
+.srow.lost .smark { background: var(--op-chip-error-bg); border-color: var(--op-chip-error-text); color: var(--op-chip-error-text); }
+.sname { grid-area: n; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.sname > span, .sname > a { font-family: var(--op-font-display); font-weight: 600; font-size: 13px; color: var(--op-dark-green); line-height: 1.3; }
+.srow.todo .sname > span { color: var(--op-silver-dark); font-weight: 500; }
+.sname > span.role {
+  font-family: var(--op-font-body); font-size: 10px; font-weight: 600; line-height: 1.5; padding: 0 6px; border-radius: 4px;
+  background: var(--op-chip-neutral-bg); color: var(--op-chip-neutral-text);
+}
+.srow.todo .sname > span:not(.role) { color: var(--op-silver-light); }
+.sowner { grid-area: o; min-width: 0; font-size: 13px; color: var(--op-silver-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stime { grid-area: t; font-size: 12px; color: var(--op-silver-dark); line-height: 1.35; }
+.srow.todo .stime { color: var(--op-silver-light); }
+.sstat { grid-area: s; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.sstat small { font-size: 11px; color: var(--op-silver-light); white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--op-radius-sm); border: 1px solid; font-size: 11px; font-weight: 600; white-space: nowrap; background: var(--op-white); }
+.pill-done, .pill-ontime { color: var(--op-chip-success-text); border-color: rgba(15,122,69,.45); background: var(--op-chip-success-bg); }
+.pill-late, .pill-overdue { color: var(--op-chip-error-text); border-color: rgba(204,20,20,.45); background: var(--op-chip-error-bg); }
+.pill-progress { color: var(--op-dark-green); border-color: var(--op-dark-green); background: rgba(191, 251, 79, .45); }
+.pill-waiting { color: var(--op-chip-warning-text); border-color: rgba(138,106,0,.45); background: var(--op-chip-warning-bg); }
+.pill-lost { color: var(--op-white); border-color: var(--op-chip-error-text); background: var(--op-chip-error-text); }
+.pill-todo { color: var(--op-silver-dark); border-color: var(--op-border-input); background: var(--op-chip-neutral-bg); }
+.drawer-foot {
+  position: sticky; bottom: 0; padding: 10px 22px; background: var(--op-white); border-top: 1px solid var(--op-border-divider);
+  font-size: 11px; color: var(--op-silver-light);
+}
+@media (max-width: 560px) {
+  .dfacts { grid-template-columns: 1fr 1fr; }
+  .srow { grid-template-columns: 26px minmax(0, 1fr) auto; grid-template-areas: "m n s" ". o t"; }
+  .stime { text-align: right; }
+  .sstat { align-items: flex-end; }
+}
 .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--op-radius-sm); }
 .chip-primary { background: var(--op-chip-primary-bg); color: var(--op-chip-primary-text); }
 .chip-error { background: var(--op-chip-error-bg); color: var(--op-chip-error-text); }
@@ -498,6 +575,7 @@ button { font: inherit; color: inherit; }
         </button>
       </header>
       <div class="drawer-body" id="drawerBody"></div>
+      <footer class="drawer-foot">Times in Lagos time (WAT). Targets per step are examples.</footer>
     </aside>
   </div>
 
@@ -668,6 +746,11 @@ button { font: inherit; color: inherit; }
   })();
 
   // ---------- Helpers ----------
+  function setCreated(s) {
+    var c = stepHistory(s)[0].at;
+    s.createdAt = c;
+    s.created = String(c.getDate()).padStart(2, "0") + "/" + String(c.getMonth() + 1).padStart(2, "0") + "/" + c.getFullYear();
+  }
   function $(id) { return document.getElementById(id); }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -827,29 +910,92 @@ button { font: inherit; color: inherit; }
   // ---------- Step owners and completion times ----------
   function hash(str) { var x = 2166136261; for (var i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
   function stepOwner(s, si) {
-    var team = STEP_TEAM[STEPS[si].name];
-    if (!team) return s.owner; // RFQ, quote, acceptance, job opened, close: the deal owner
+    var name = STEPS[si].name;
+    if (name === "Margin gate") return "CEO";
+    if (name === "Customer acceptance") return s.customer;
+    var team = STEP_TEAM[name];
+    if (!team) return s.owner; // deal created, contacted, RFQ, quote, job opened, close: the deal owner
     var list = TEAMS[team];
     return list[hash(s.id + team) % list.length];
   }
-  // For steps 0..current: who handled it and when it was completed (or, for the current step, when it started)
+  // Which team each step belongs to, and the target time for it (hours; examples)
+  var STEP_ROLE = {
+    "Deal created": "Sales", "Customer contacted": "Sales", "RFQ": "Sales", "Rate request": "Commercial", "Quote issued": "Sales",
+    "Qualification & credit": "Finance", "Margin gate": "CEO", "Customer acceptance": "Customer",
+    "Credit & payment terms": "Finance", "Job opened": "Sales",
+    "Booking": "Operations", "Origin & sailing": "Operations", "Pre-arrival & clearing": "Operations",
+    "Cost-to-bill check": "Finance", "Invoicing & collection": "Finance", "Delivery & documents": "Operations", "Job close & review": "Sales"
+  };
+  var TARGET_H = {
+    "Deal created": 2, "Customer contacted": 4, "RFQ": 4, "Rate request": 24, "Quote issued": 8, "Qualification & credit": 24,
+    "Margin gate": 4, "Customer acceptance": 72, "Credit & payment terms": 24, "Job opened": 8, "Booking": 48,
+    "Origin & sailing": 336, "Pre-arrival & clearing": 120, "Cost-to-bill check": 24, "Invoicing & collection": 168,
+    "Delivery & documents": 72, "Job close & review": 48
+  };
+  var HOUR = 3600000;
   var AS_OF = new Date(2026, 10, 10, 12, 0); // sample data is dated up to 10 Nov 2026
-  function stepHistory(s, current) {
+
+  // For steps 0..current: who handled it and when (completion time; for the current step, when it started;
+  // for a lost shipment's last step, when it was lost). Built backwards from AS_OF so each step takes a
+  // plausible time against its target. Cached on the shipment.
+  function stepHistory(s) {
     if (s.history) return s.history; // recorded history for hand-entered shipments
-    // Work in "office minutes" (08:00-18:00) so every time lands within working hours
-    var d = s.created.split("/");
-    var day0 = new Date(+d[2], +d[1] - 1, +d[0]);
-    var days = Math.round((new Date(AS_OF.getFullYear(), AS_OF.getMonth(), AS_OF.getDate()) - day0) / 86400000);
-    var span = Math.max(days * 600 + (AS_OF.getHours() - 8) * 60 + AS_OF.getMinutes() - 30, 60 * (current + 1));
-    var slot = span / (current + 1);
-    var out = [];
-    for (var si = 0; si <= current; si++) {
-      var jitter = (hash(s.id + ":" + si) % 1000) / 1000; // 0..1, stable per shipment and step
-      var m = Math.round(30 + slot * si + slot * (0.25 + 0.6 * jitter));
-      var at = new Date(day0.getFullYear(), day0.getMonth(), day0.getDate() + Math.floor(m / 600), 8, m % 600);
-      out.push({ owner: stepOwner(s, si), at: at });
+    if (s._hist) return s._hist;
+    var current = s.lost ? s.lostStep : s.step;
+    var j = function (k) { return (hash(s.id + ":" + k) % 1000) / 1000; }; // 0..1, stable per shipment and step
+    var target = function (k) { return TARGET_H[STEPS[k].name] * HOUR; };
+    var a = s.alert ? alertById(s.alert) : null;
+    var at = [];
+    if (s.lost) {
+      at[current] = AS_OF.getTime() - (1 + 4 * j("lost")) * 24 * HOUR;
+      for (var k = current; k > 0; k--) at[k - 1] = at[k] - target(k) * (0.35 + j(k));
+    } else {
+      var f = a && a.sev === "error" ? 1.15 + 0.6 * j("e") : a ? 0.3 + 0.5 * j("e") : 0.15 + 0.95 * j("e");
+      at[current] = AS_OF.getTime() - target(current) * f; // when the current step started
+      if (current > 0) at[current - 1] = at[current];        // ...which is when the previous step completed
+      for (var k2 = current - 1; k2 > 0; k2--) at[k2 - 1] = at[k2] - target(k2) * (0.35 + j(k2));
     }
-    return out;
+    // Keep times within the working day (08:00-19:00), in order, and no later than AS_OF
+    for (var n = 0; n < at.length; n++) {
+      var d = new Date(at[n]);
+      if (d.getHours() < 8) d.setHours(8, hash(s.id + "m" + n) % 50, 0, 0);
+      else if (d.getHours() >= 19) { d.setDate(d.getDate() + 1); d.setHours(8, hash(s.id + "m" + n) % 50, 0, 0); }
+      var t = d.getTime();
+      if (n > 0 && t < at[n - 1] + 10 * 60000) t = at[n - 1] + (10 + hash(s.id + "g" + n) % 40) * 60000;
+      at[n] = Math.min(t, AS_OF.getTime() - 5 * 60000);
+    }
+    s._hist = at.map(function (t, k) { return { owner: stepOwner(s, k), at: new Date(Math.round(t / 60000) * 60000) }; });
+    return s._hist;
+  }
+  // Timing for one step: start, how long it took, when it is due, and its status
+  function stepTiming(s, hist, si) {
+    var current = s.lost ? s.lostStep : s.step;
+    if (si > current) return { key: "todo", label: "Not started" };
+    var h = hist[si];
+    var start = si === 0 ? h.at : hist[si - 1].at;
+    var target = TARGET_H[STEPS[si].name] * HOUR;
+    var a = s.alert ? alertById(s.alert) : null;
+    if (si < current || (si === current && h.label)) { // done (a recorded current step counts as done for timing)
+      if (si === 0) return { key: "done", label: "Done" };
+      var took = h.at - start;
+      return { key: took <= target ? "ontime" : "late", label: took <= target ? "On time" : "Late", sub: "took " + fmtDur(took) };
+    }
+    if (si === current) {
+      if (s.lost) return { key: "lost", label: "Lost", sub: "after " + fmtDur(h.at - start) };
+      var due = new Date(h.at.getTime() + target);
+      if (a && a.sev === "warning") return { key: "waiting", label: "Waiting", sub: a.one || a.label };
+      if (AS_OF > due || (a && a.sev === "error")) return { key: "overdue", label: "Overdue", sub: "was due " + fmtShort(due) };
+      return { key: "progress", label: "In progress", sub: "due " + fmtShort(due) };
+    }
+    return { key: "todo", label: "Not started" };
+  }
+  function fmtShort(dt) {
+    return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + ", " +
+      dt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+  function fmtDur(ms) {
+    var m = Math.max(0, Math.round(ms / 60000)), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+    return d ? d + "d " + h + "h" : h ? h + "h " + mm + "m" : mm + "m";
   }
   function fmtDateTime(dt) {
     return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) + ", " +
@@ -954,50 +1100,64 @@ button { font: inherit; color: inherit; }
     $("drawerTitle").textContent = s.id;
     $("drawerSub").textContent = s.customer;
 
-    var status = s.lost
-      ? '<span class="chip chip-error">' + CROSS.replace("<svg ", '<svg width="10" height="10" ') + " Lost</span>"
-      : '<span class="chip chip-primary">' + esc(PHASES[s.phase].name) + " · " + esc(STEPS[s.step].name) + "</span>";
     var notice = a ? '<div class="notice notice-' + a.sev + '"><span class="dot dot-' + a.sev + '"></span><div><b>' +
       esc(a.label.charAt(0).toUpperCase() + a.label.slice(1)) + "</b><br>" + esc(a.detail) + "</div></div>" : "";
     if (s.lost) notice = '<div class="notice notice-error"><span class="dot dot-error"></span><div><b>Lost at ' + esc(STEPS[s.lostStep].name) +
       "</b><br>" + esc(s.lostReason) + "</div></div>";
 
     var current = s.lost ? s.lostStep : s.step;
-    var hist = stepHistory(s, current);
-    var steps = PHASES.map(function (p, pi) {
+    var hist = stepHistory(s);
+    var doneCount = s.lost ? current : current + (hist[current] && hist[current].label ? 1 : 0);
+    var phaseChip = s.lost
+      ? '<span class="dchip dchip-lost">' + CROSS + " Lost at " + esc(STEPS[s.lostStep].name) + "</span>"
+      : '<span class="dchip dchip-phase">' + esc(PHASES[s.phase].name) + " · " + esc(STEPS[s.step].name) + "</span>";
+
+    var phases = PHASES.map(function (p, pi) {
+      var idx = STEPS.map(function (st, si) { return si; }).filter(function (si) { return STEPS[si].phase === pi; });
+      var done = idx.filter(function (si) { return si < doneCount; }).length;
       var head = pi === 0
         ? '<a class="step-link" href="' + esc(crmUrl(s, hist)) + '" title="Open this deal on the CRM board">' + esc(p.name) + ARROW + "</a>"
         : esc(p.name);
-      return '<li class="step-phase">' + head + "</li>" + STEPS.map(function (st, si) {
-        if (st.phase !== pi) return "";
-        var cls = si < current ? "done" : si === current ? (s.lost ? "lost" : "current") : "";
-        var mark = si < current ? CHECK : si === current && s.lost ? CROSS : "";
-        var meta = "";
+      var rows = idx.map(function (si) {
+        var st = STEPS[si];
+        var t = stepTiming(s, hist, si);
+        var cls = si < current ? "done" : si > current ? "todo" : t.key === "lost" ? "lost" : t.key === "overdue" ? "overdue" : t.key === "waiting" ? "waiting" : "current";
+        if (si === current && hist[si] && hist[si].label && !s.lost) cls = "current";
+        var mark = cls === "done" ? CHECK : cls === "lost" ? CROSS : "";
+        var name = st.name === "RFQ"
+          ? '<a class="step-link" href="' + esc(rfqUrl(s)) + '" title="Open the RFQ table">' + esc(st.name) + ARROW + "</a>"
+          : st.name === "Quote issued"
+          ? '<a class="step-link" href="' + esc(quoteUrl(s, hist)) + '" title="Open the quote">' + esc(st.name) + ARROW + "</a>"
+          : "<span>" + esc(st.name) + "</span>";
+        var time = "—";
         if (si <= current) {
           var hh = hist[si];
-          var when = hh.label ? hh.label + " " : si < current ? "Completed " : s.lost ? "Lost " : "Started ";
-          meta = '<span class="step-meta">' + avatar(hh.owner) + "<b>" + esc(hh.owner) + "</b>·" +
-            '<time datetime="' + hh.at.toISOString() + '">' + when + fmtDateTime(hh.at) + "</time></span>";
+          var prefix = hh.label && si === current ? hh.label + " " : si < current ? "" : s.lost ? "Lost " : "Started ";
+          time = '<time datetime="' + hh.at.toISOString() + '">' + esc(prefix) + fmtShort(hh.at) + "</time>";
         }
-        return '<li class="step ' + cls + '"><i>' + mark + '</i><span class="step-body">' +
-          (st.name === "RFQ"
-            ? '<a class="step-link" href="' + esc(rfqUrl(s)) + '" title="Open the RFQ table">' + esc(st.name) + ARROW + "</a>"
-            : st.name === "Quote issued"
-            ? '<a class="step-link" href="' + esc(quoteUrl(s, hist)) + '" title="Open the quote">' + esc(st.name) + ARROW + "</a>"
-            : "<span>" + esc(st.name) + "</span>") + meta + "</span></li>";
+        var owner = si <= current ? hist[si].owner : stepOwner(s, si);
+        return '<li class="srow ' + cls + '"><span class="smark" aria-hidden="true">' + mark + "</span>" +
+          '<span class="sname">' + name + '<span class="role">' + esc(STEP_ROLE[st.name] || "") + "</span></span>" +
+          '<span class="sowner">' + esc(owner) + "</span>" +
+          '<span class="stime">' + time + "</span>" +
+          '<span class="sstat"><span class="pill pill-' + t.key + '">' + esc(t.label) + "</span>" + (t.sub ? "<small>" + esc(t.sub) + "</small>" : "") + "</span></li>";
       }).join("");
+      return '<section class="phase" aria-label="' + esc(p.name) + '"><div class="phase-head"><h4>' + head + "</h4>" +
+        '<span class="pbar" aria-hidden="true"><span style="width:' + Math.round(100 * done / idx.length) + '%"></span></span>' +
+        '<span class="pcount">' + done + " of " + idx.length + "</span></div>" +
+        '<ul class="srows">' + rows + "</ul></section>";
     }).join("");
 
     $("drawerBody").innerHTML =
-      '<p style="margin:0 0 16px">' + status + ' <span class="chip chip-mode">' + esc(s.mode) + "</span></p>" + notice +
-      '<dl class="facts">' +
-      "<div><dt>Customer</dt><dd>" + esc(s.customer) + "</dd></div>" +
-      "<div><dt>Deal owner</dt><dd>" + esc(s.owner) + "</dd></div>" +
-      "<div><dt>Route</dt><dd>" + esc(s.route) + "</dd></div>" +
+      '<dl class="dfacts">' +
+      "<div><dt>Route</dt><dd>" + esc(s.route) + " (" + (/air/i.test(s.mode) ? "air" : "ocean") + ")</dd></div>" +
       '<div><dt>Deal value</dt><dd class="money">' + money(s.value) + "</dd></div>" +
-      "<div><dt>Created</dt><dd>" + esc(s.created) + "</dd></div>" +
-      "<div><dt>Status</dt><dd>" + esc(statusText(s)) + "</dd></div></dl>" +
-      '<p class="eyebrow">Progress</p><ul class="steps">' + steps + "</ul>";
+      "<div><dt>Deal owner</dt><dd>" + esc(s.owner) + "</dd></div>" +
+      "<div><dt>Created</dt><dd>" + fmtShort(s.createdAt || hist[0].at) + "</dd></div></dl>" +
+      '<div class="dchips">' + phaseChip + '<span class="dchip dchip-count">' + doneCount + " of " + STEPS.length + " done</span></div>" + notice +
+      '<ul class="key" aria-label="Key"><li><i class="k-done"></i>Completed</li><li><i class="k-progress"></i>In progress</li>' +
+      '<li><i class="k-overdue"></i>Overdue</li><li><i class="k-waiting"></i>Waiting on someone</li><li><i class="k-todo"></i>Not started</li></ul>' +
+      phases;
 
     var host = $("drawer");
     host.hidden = false;
@@ -1052,6 +1212,7 @@ button { font: inherit; color: inherit; }
     else if (!$("notifPop").hidden) { togglePop(false); $("bellBtn").focus(); }
   });
 
+  SHIPMENTS.forEach(setCreated); // created = when the deal was created in the step history
   function render() { renderSummary(); renderTracker(); }
   renderNotes();
   render();
