@@ -11,6 +11,7 @@ tracker with a detail drawer showing who handled each step and when.
   in a shipment's detail drawer opens it on that shipment's quote
 - `crm.html` — the CRM pipeline board; the Prospect heading in a shipment's
   detail drawer opens it with that deal highlighted in its stage
+- `design/brand/oneport365-logo.png` — OnePort 365 logo shown top right on every page
 - `design/tokens.css` — OnePort 365 colours, type, spacing and shadows
 - `design/DESIGN_SYSTEM.md` — the design system reference
 

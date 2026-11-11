@@ -122,6 +122,10 @@ tbody tr.focus:hover td { background: rgba(191, 251, 79, .38); }
   .top h1 { font-size: 22px; }
   .select { flex: 1 1 140px; min-width: 0; }
 }
+/* Brand bar: page context on the left, OnePort 365 logo on the right */
+.brandbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; margin-bottom: 14px; }
+.brand-logo { display: block; height: 40px; width: auto; margin-left: auto; }
+@media (max-width: 700px) { .brand-logo { height: 32px; } }
   </style>
 </head>
 <body>
@@ -143,10 +147,13 @@ tbody tr.focus:hover td { background: rgba(191, 251, 79, .38); }
     </nav>
 
     <main class="main">
-      <a class="back" href="index.html">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Back to dashboard
-      </a>
+      <div class="brandbar">
+        <a class="back" href="index.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to dashboard
+        </a>
+        <img class="brand-logo" src="design/brand/oneport365-logo.png" width="114" height="44" alt="OnePort 365" />
+      </div>
       <header class="top">
         <div>
           <h1>RFQ</h1>

@@ -355,6 +355,10 @@ button { font: inherit; color: inherit; }
   .fselect { flex: 1 1 140px; min-width: 0; }
 }
 
+/* Brand bar: page context on the left, OnePort 365 logo on the right */
+.brandbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; margin-bottom: 14px; }
+.brand-logo { display: block; height: 40px; width: auto; margin-left: auto; }
+@media (max-width: 700px) { .brand-logo { height: 32px; } }
 </style>
 </head>
 <body>
@@ -384,6 +388,7 @@ button { font: inherit; color: inherit; }
     </nav>
 
     <main class="main">
+      <div class="brandbar"><img class="brand-logo" src="design/brand/oneport365-logo.png" width="114" height="44" alt="OnePort 365" /></div>
       <!-- Filters -->
       <div class="filters" role="search" aria-label="Filter shipments">
         <label class="search">
