@@ -92,14 +92,22 @@ button { font: inherit; color: inherit; }
   background: rgba(2,56,25,.12); color: var(--op-dark-green); display: flex; align-items: center; justify-content: center;
 }
 .filter-chip svg { width: 12px; height: 12px; }
+/* ---------- Filter bar ---------- */
+.filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .search {
-  display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; width: min(280px, 100%);
-  background: var(--op-light-green); border-radius: var(--op-radius-md); color: var(--op-dark-green);
+  flex: 1 1 320px; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px;
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md); color: var(--op-silver-dark);
 }
-.search svg { width: 17px; height: 17px; flex-shrink: 0; }
+.search svg { width: 16px; height: 16px; flex-shrink: 0; }
 .search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font: inherit; color: var(--op-dark-green); }
-.search input::placeholder { color: #4a5a3f; }
-.search:focus-within { box-shadow: var(--op-focus-ring); }
+.search input::placeholder { color: var(--op-silver-dark); }
+.search:focus-within { border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); }
+.fselect {
+  flex: 0 1 170px; min-width: 150px; height: 40px; padding: 0 12px; cursor: pointer; font: inherit; color: var(--op-dark-green);
+  background: var(--op-white); border: 1px solid var(--op-border-card); border-radius: var(--op-radius-md);
+}
+.fselect:focus { outline: none; border-color: var(--op-dark-green); box-shadow: var(--op-focus-ring); }
+.fselect.on { border-color: var(--op-dark-green); background: rgba(191, 251, 79, .2); }
 
 .legend {
   list-style: none; margin: 14px 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px;
@@ -344,7 +352,7 @@ button { font: inherit; color: inherit; }
   .rail-mark { margin: 0 8px 0 0; }
   .main { padding-block: 20px 32px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .tracker { padding: 16px 14px 12px; }
-  .search { width: 100%; }
+  .fselect { flex: 1 1 140px; min-width: 0; }
 }
 
 </style>
@@ -376,6 +384,23 @@ button { font: inherit; color: inherit; }
     </nav>
 
     <main class="main">
+      <!-- Filters -->
+      <div class="filters" role="search" aria-label="Filter shipments">
+        <label class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="search" id="search" placeholder="Search job ID or customer" aria-label="Search job ID or customer" autocomplete="off" />
+        </label>
+        <select class="fselect" id="fOwner" aria-label="Owner"><option value="">All owners</option></select>
+        <select class="fselect" id="fStage" aria-label="Stage"><option value="">All stages</option></select>
+        <select class="fselect" id="fStatus" aria-label="Status">
+          <option value="">All statuses</option>
+          <option value="ontrack">On track</option>
+          <option value="overdue">Delayed or overdue</option>
+          <option value="waiting">Waiting on someone</option>
+          <option value="lost">Lost</option>
+        </select>
+      </div>
+
       <!-- Shipment tracker -->
       <section class="tracker" aria-labelledby="trackerTitle">
         <div class="tracker-head">
@@ -383,15 +408,11 @@ button { font: inherit; color: inherit; }
             <h2 id="trackerTitle">Shipments</h2>
             <div class="filter-chip" id="filterChip" hidden>
               <span id="filterLabel"></span>
-              <button type="button" id="clearFilter" aria-label="Clear filter">
+              <button type="button" id="clearFilter" aria-label="Clear filters">
                 <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
               </button>
             </div>
           </div>
-          <label class="search">
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input type="search" id="search" placeholder="Search ID or customer" autocomplete="off" />
-          </label>
         </div>
 
         <ul class="legend" aria-label="Legend">
@@ -629,32 +650,22 @@ button { font: inherit; color: inherit; }
   function money(n) { return "$" + Number(n).toLocaleString("en-US"); }
 
   // ---------- State ----------
-  var state = { filter: { kind: "all" }, page: 1, perPage: 10, q: "" };
-  function sameFilter(a, b) { return a.kind === b.kind && a.value === b.value; }
-  function setFilter(f) {
-    state.filter = sameFilter(state.filter, f) ? { kind: "all" } : f; // clicking the active filter clears it
-    state.page = 1;
-    render();
+  var state = { page: 1, perPage: 10, q: "", owner: "", stage: "", status: "" };
+  // A shipment's status, from its current step's timing (same rules as the detail drawer)
+  function shipStatus(s) {
+    if (s.lost) return "lost";
+    var key = stepTiming(s, stepHistory(s), s.step).key;
+    return key === "overdue" ? "overdue" : key === "waiting" ? "waiting" : "ontrack";
   }
   function matchesFilter(s) {
-    var f = state.filter;
-    if (f.kind === "all") return true;
-    if (f.kind === "active") return !s.lost;
-    if (f.kind === "lost") return s.lost;
-    if (f.kind === "phase") return !s.lost && s.phase === f.value;
-    if (f.kind === "step") return !s.lost && s.step === f.value;
-    if (f.kind === "alert") return s.alert === f.value;
+    if (state.owner && s.owner !== state.owner) return false;
+    if (state.stage === "lost" && !s.lost) return false;
+    if (/^p:/.test(state.stage) && (s.lost || s.phase !== +state.stage.slice(2))) return false;
+    if (/^s:/.test(state.stage) && (s.lost || s.step !== +state.stage.slice(2))) return false;
+    if (state.status && shipStatus(s) !== state.status) return false;
     return true;
   }
-  function filterLabel() {
-    var f = state.filter;
-    if (f.kind === "active") return "Active shipments";
-    if (f.kind === "lost") return "Lost prospects";
-    if (f.kind === "phase") return PHASES[f.value].name;
-    if (f.kind === "step") return PHASES[STEPS[f.value].phase].name + " · " + STEPS[f.value].name;
-    if (f.kind === "alert") { var a = alertById(f.value); return a.label.charAt(0).toUpperCase() + a.label.slice(1); }
-    return "";
-  }
+  function activeFilters() { return [state.q, state.owner, state.stage, state.status].filter(Boolean).length; }
 
   // ---------- Tracker ----------
   $("phaseHeaders").innerHTML = PHASES.map(function (p) { return "<span>" + esc(p.name) + "</span>"; }).join("");
@@ -689,10 +700,13 @@ button { font: inherit; color: inherit; }
 
     $("rows").innerHTML = shown.length ? shown.map(function (s) {
       var a = s.alert ? alertById(s.alert) : null;
-      return '<button type="button" class="ship" data-ship="' + s.id + '" aria-label="' + esc(s.id + ", " + s.customer + ", " + statusText(s) + (a ? ", " + a.label : "")) + '">' +
-        '<span class="ship-id"><b>' + esc(s.id) + (a ? '<span class="dot dot-' + a.sev + '" title="' + esc(a.label) + '"></span>' : "") + "</b>" +
+      var st = shipStatus(s);
+      // dot: red for delayed/overdue, gold for waiting on someone (same rule as the status filter)
+      var dot = st === "overdue" ? { sev: "error", label: a ? a.label : "overdue" } : st === "waiting" ? { sev: "warning", label: a ? a.label : "waiting on someone" } : null;
+      return '<button type="button" class="ship" data-ship="' + s.id + '" aria-label="' + esc(s.id + ", " + s.customer + ", " + statusText(s) + (dot ? ", " + dot.label : "")) + '">' +
+        '<span class="ship-id"><b>' + esc(s.id) + (dot ? '<span class="dot dot-' + dot.sev + '" title="' + esc(dot.label) + '"></span>' : "") + "</b>" +
         "<small>" + esc(s.customer) + "</small></span>" + barHtml(s) + "</button>";
-    }).join("") : '<div class="empty"><b>No shipments match</b>Try another search or clear the filter.</div>';
+    }).join("") : '<div class="empty"><b>No shipments match</b>Try another search or clear the filters.</div>';
 
     $("showing").innerHTML = list.length
       ? "Showing <b>" + (start + 1) + "–" + (start + shown.length) + "</b> of " + list.length
@@ -712,8 +726,10 @@ button { font: inherit; color: inherit; }
       }).join("") +
       '<button type="button" class="pg" data-page="' + (state.page + 1) + '"' + (state.page === pages ? " disabled" : "") + ">Next ›</button>";
 
-    $("filterChip").hidden = state.filter.kind === "all";
-    $("filterLabel").textContent = filterLabel() + " · " + list.length;
+    var n = activeFilters();
+    $("filterChip").hidden = !n;
+    $("filterLabel").textContent = (n === 1 ? "1 filter" : n + " filters") + " · " + list.length + (list.length === 1 ? " shipment" : " shipments");
+    ["fOwner", "fStage", "fStatus"].forEach(function (id) { $(id).classList.toggle("on", !!$(id).value); });
   }
 
   $("pages").addEventListener("click", function (e) {
@@ -724,7 +740,22 @@ button { font: inherit; color: inherit; }
   });
   $("perPage").addEventListener("change", function () { state.perPage = Number(this.value); state.page = 1; renderTracker(); });
   $("search").addEventListener("input", function () { state.q = this.value.trim(); state.page = 1; renderTracker(); });
-  $("clearFilter").addEventListener("click", function () { state.filter = { kind: "all" }; state.page = 1; render(); });
+  // Filter options
+  $("fOwner").innerHTML += SHIPMENTS.map(function (s) { return s.owner; })
+    .filter(function (o, i, a) { return a.indexOf(o) === i; }).sort()
+    .map(function (o) { return '<option value="' + esc(o) + '">' + esc(o) + "</option>"; }).join("");
+  $("fStage").innerHTML += PHASES.map(function (p, pi) {
+    return '<optgroup label="' + esc(p.name) + '"><option value="p:' + pi + '">All ' + esc(p.name) + "</option>" +
+      STEPS.map(function (st, si) { return st.phase === pi ? '<option value="s:' + si + '">' + esc(st.name) + "</option>" : ""; }).join("") + "</optgroup>";
+  }).join("") + '<option value="lost">Lost</option>';
+  [["fOwner", "owner"], ["fStage", "stage"], ["fStatus", "status"]].forEach(function (f) {
+    $(f[0]).addEventListener("change", function () { state[f[1]] = this.value; state.page = 1; renderTracker(); });
+  });
+  $("clearFilter").addEventListener("click", function () {
+    state.q = state.owner = state.stage = state.status = "";
+    $("search").value = $("fOwner").value = $("fStage").value = $("fStatus").value = "";
+    state.page = 1; renderTracker();
+  });
   $("rows").addEventListener("click", function (e) {
     var b = e.target.closest("[data-ship]");
     if (b) openDrawer(b.getAttribute("data-ship"));
